@@ -1,0 +1,8 @@
+Reprendre les étapes du `writeup1` jusqu'à la connexion en ssh avec `laurie`.
+
+Nous allons utiliser un script `dirtyc0w`:
+https://raw.githubusercontent.com/FireFart/dirtycow/master/dirty.c
+
+Nous le lancons, compilons et éxecutons.
+Cela remplace l'user `root` par l'user `firefart`.
+Il y a parfois un petit délai avant la dernière étape où l'on passe `firefart`.
