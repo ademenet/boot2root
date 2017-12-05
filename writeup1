@@ -259,23 +259,27 @@ $1 = 0x804b680
 
 Nous avons donc une comparaison avec une _string_ qui ressemble à "Public speaking is very e". Un simple `strings bomb | grep P` nous permet de tomber sur cette _string_ : `Public speaking is very easy.` !
 
-### 2e étape
+### 2ème étape
+
+En observant `<phase_2>` avec `objdump -d bomb`, nous notons un appel à la fonction `<read_six_numbers>`. Cette fonction vérifie que l'entrée correspond à 6 _integers_ séparés par des espaces.
+
+Dans `gdb`, nous pouvons donc fixer un _breakpoint_ sur `<phase_2>` et puis faire un `disas` qui va nous afficher le code assembleur de la fonction.
 
 `1 2 6 24 120 720`
 
-### 3e étape
+### 3ème étape
 
 `1 b 214`
 
-### 4e étape
+### 4ème étape
 
 `9`
 
-### 5e étape
+### 5ème étape
 
 `opekmq`
 
-### 6e étape
+### 6ème étape
 
 `4 2 6 3 1 5`
 
