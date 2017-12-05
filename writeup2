@@ -18,10 +18,14 @@ Le mot de passe est crypté avec la fonction :
 de la librairie `#include <crypt.h>`
 
 Une chaine de caractères est alors créée contenant la structure complète.
-Mmap est utilisé sur `/etc/passwd`.
+Mmap est utilisé sur `/etc/passwd` avec le file descriptor (ce qui nous permettra ensuite d'écrire en mémoire ET sur le fichier).
 La fonction `pid_t  fork(void);` est utilisé afin de créer un nouveau processus.
-if (pid)
+if (processus parent)
     Ensuite, on utilise `pid_t  waitpid(pid_t pid, int *status, int options);` afin d'attendre le changement d'état du processus fils.
     `waitpid` suspend l'exécution du processus appelant jusqu'à ce que le fils spécifié par son pid ait changé d'état.
-    `long ptrace(enum __ptrace_request requête, pid_t pid, void *addr, void *data);` est utilisé, cette fonction fournit au processus parent un moyen de contrôler l'éxécution d'un autre processus et d'éditer son image mémoire.
-else
+    `long ptrace(enum __ptrace_request requête, pid_t pid, void *addr, void *data);` est utilisé, cette fonction fournit au processus parent un moyen de contrôler l'éxécution d'un autre processus et d'éditer son image mémoire. Avec `PTRACE_POKETEXT` permettant d'écrire le password dans le fichier mappé.
+else (processus enfant)
+    `pthread_create` crée un nouveau thread qui exécute `madviseThread()` => manager le fonctionnement du système sur l'allocation; `MADV_DONTNEED` ne prévoit pas d'accès futur et donc le système ne vérifie pas les droits lors de l'écriture.
+    Utilisation de `ptrace` avec `PTRACE_TRACEME`, utile pour le processus parent
+    `kill` processus enfant
+    `pthread_join` suspends le processus enfant
