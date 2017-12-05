@@ -4,5 +4,24 @@ Nous allons utiliser un script `dirtyc0w`:
 https://raw.githubusercontent.com/FireFart/dirtycow/master/dirty.c
 
 Nous le lancons, compilons et éxecutons.
-Cela remplace l'user `root` par l'user `firefart`.
-Il y a parfois un petit délai avant la dernière étape où l'on passe `firefart`.
+Cet exploit utilise l'exploit pokemon de la vulnérabilité dirtycow comme base et génère automatiquement une nouvelle ligne de mot de passe.
+L'user est invité à rentrer un noyveau mot de passe lors de l'éxecution du binaire.
+Le fichier `/etc/passwd` est sauvegardé dans `/tmp/passswd.bak` et remplace le compte racine par la ligne générée.
+
+Si un fichier `/tmp/passswd.bak` existe déjà, le programme retourne un message d'erreur et s'arrête.
+Une structure est initialisée (`username`, `user_id`, `info`, ...).
+- Si il y a un second argument alors il est mis en mot de passe.
+- Sinon, l'utilisateur est invité à taper son mot de passe.
+
+Le mot de passe est crypté avec la fonction :
+```char *crypt(const char *key, const char *salt);```
+de la librairie `#include <crypt.h>`
+
+Une chaine de caractères est alors créée contenant la structure complète.
+Mmap est utilisé sur `/etc/passwd`.
+La fonction `pid_t  fork(void);` est utilisé afin de créer un nouveau processus.
+if (pid)
+    Ensuite, on utilise `pid_t  waitpid(pid_t pid, int *status, int options);` afin d'attendre le changement d'état du processus fils.
+    `waitpid` suspend l'exécution du processus appelant jusqu'à ce que le fils spécifié par son pid ait changé d'état.
+    `long ptrace(enum __ptrace_request requête, pid_t pid, void *addr, void *data);` est utilisé, cette fonction fournit au processus parent un moyen de contrôler l'éxécution d'un autre processus et d'éditer son image mémoire.
+else
