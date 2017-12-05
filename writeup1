@@ -265,6 +265,13 @@ En observant `<phase_2>` avec `objdump -d bomb`, nous notons un appel à la fonc
 
 Dans `gdb`, nous pouvons donc fixer un _breakpoint_ sur `<phase_2>` et puis faire un `disas` qui va nous afficher le code assembleur de la fonction.
 
+Après beaucoup de tests, nous en déduisons que la fonction effectue les opérations suivantes :
+
+```pseudo
+counter <- 1
+for 
+```
+
 `1 2 6 24 120 720`
 
 ### 3ème étape
