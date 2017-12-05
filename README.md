@@ -4,6 +4,11 @@
 
 # Ressources
 
+Des ressources pour résoudre la `bomb` :
+
+- [Une suite d'articles](http://zpalexander.com/binary-bomb-lab-set-up/) sur comment résoudre la `bomb` de la phase 1 à 5
+- [Un article sur la phase 2](https://medium.com/@stvkas/cmu-bomb-lab-phase-2-a91aff587f40) résolu en _positive overflow_
+
 Des ressources bien utiles :
 
 - [Les bases du hacking](http://www.bases-hacking.org/bases.html), pleins d'articles intéressants
