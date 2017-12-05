@@ -7,7 +7,10 @@
 Des ressources pour résoudre la `bomb` :
 
 - [Une suite d'articles](http://zpalexander.com/binary-bomb-lab-set-up/) sur comment résoudre la `bomb` de la phase 1 à 5
-- [Un article sur la phase 2](https://medium.com/@stvkas/cmu-bomb-lab-phase-2-a91aff587f40) résolu en _positive overflow_
+- _Phase 2_ : [Une bonne explication de la phase 2](http://www.vedranb.com/post/19447908782/phase-2)
+- _Phase 2_ : [Un article sur la phase 2](https://medium.com/@stvkas/cmu-bomb-lab-phase-2-a91aff587f40) résolu en _positive overflow_
+
+
 
 Des ressources bien utiles :
 
