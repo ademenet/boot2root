@@ -10,8 +10,6 @@ Des ressources pour résoudre la `bomb` :
 - _Phase 2_ : [Une bonne explication de la phase 2](http://www.vedranb.com/post/19447908782/phase-2)
 - _Phase 2_ : [Un article sur la phase 2](https://medium.com/@stvkas/cmu-bomb-lab-phase-2-a91aff587f40) résolu en _positive overflow_
 
-
-
 Des ressources bien utiles :
 
 - [Les bases du hacking](http://www.bases-hacking.org/bases.html), pleins d'articles intéressants
@@ -29,3 +27,6 @@ Des ebooks bien utiles :
 - [Black Hat Python: Python Programming for Hackers and Pentesters](https://pythonizame.s3.amazonaws.com/media/Book/black-hat-python/file/af0ef90e-83cf-11e5-964d-04015fb6ba01.pdf)
 - [The Basics of Hacking and Penetration Testing](http://padabum.com/x.php?id=212150)
 
+Autres :
+
+- [Guide des commandes GDB](http://web.cecs.pdx.edu/~jrb/cs201/lectures/handouts/gdbcomm.txt)
