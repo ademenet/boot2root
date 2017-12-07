@@ -1,6 +1,6 @@
-WRITEUP2
+# WRITEUP2
 
-Pré-requis
+## Pré-requis
 
 Avant de commencer cet _exploit_, vérifiez que ces pré-requis sont
 présents :
@@ -10,6 +10,8 @@ présents :
     minutes.
 -   python 3.x.
 -   Reprendre les étapes du `writeup1` jusqu'à la connexion en ssh avec : _laurie_.
+
+## Le script
 
 Les étapes suivantes sont reprises dans le script2.sh.
 
@@ -42,6 +44,7 @@ Ensuite nous compilons et lançons ce script avec un argument afin de choisir un
 
     DON'T FORGET TO RESTORE! $ mv /tmp/passwd.bak /etc/passwd
 
+# Explications
 
 Ce script utilise _l'exploit pokemon_ de la faille _dirtycow_ effective sur le kernel Unix [date]. Il remplace l'utilisateur `root` par un utilisateur custom.
 L'user est invité à rentrer un nouveau mot de passe lors de l'éxecution du binaire ou à le passer en paramètre au moment de l'éxecution.
@@ -60,13 +63,13 @@ Une chaine de caractères est alors créée contenant la structure complète.
 Mmap est utilisé sur `/etc/passwd` avec le file descriptor (ce qui nous permettra ensuite d'écrire en mémoire ET sur le fichier).
 La fonction `pid_t  fork(void);` est utilisé afin de créer un nouveau processus.
 
-Processus parent :
+### Processus parent :
 
 - Nous utilisons `pid_t  waitpid(pid_t pid, int *status, int options);` afin d'attendre le changement d'état du processus fils. `waitpid` suspend l'exécution du processus appelant jusqu'à ce que le fils spécifié par son pid ait changé d'état.
 - `long ptrace(enum __ptrace_request requête, pid_t pid, void *addr, void *data);` est utilisé, cette fonction fournit au processus parent un moyen de contrôler l'éxécution d'un autre processus et d'éditer son image mémoire. Avec `PTRACE_POKETEXT` permettant d'écrire le password dans le fichier mappé.
 
 
-Processus enfant :
+### Processus enfant :
 
 - `pthread_create` crée un nouveau thread qui exécute `madviseThread()` => manager le fonctionnement du système sur l'allocation; `MADV_DONTNEED` ne prévoit pas d'accès futur et donc le système ne vérifie pas les droits lors de l'écriture.
 - Utilisation de `ptrace` avec `PTRACE_TRACEME`, utile pour le processus parent
