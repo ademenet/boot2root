@@ -515,9 +515,121 @@ Nous avons maintenant nos trois arguments à passer à la bombe à savoir : `1 b
 
 ### 4ème étape
 
-Suite de Fibonacci.
+Nous avons le code assembleur suivant :
 
-`9`
+```
+Dump of assembler code for function phase_4:
+   0x08048ce0 <+0>:	push   %ebp
+   0x08048ce1 <+1>:	mov    %esp,%ebp
+   0x08048ce3 <+3>:	sub    $0x18,%esp
+   0x08048ce6 <+6>:	mov    0x8(%ebp),%edx
+   0x08048ce9 <+9>:	add    $0xfffffffc,%esp
+   0x08048cec <+12>:	lea    -0x4(%ebp),%eax
+   0x08048cef <+15>:	push   %eax
+   0x08048cf0 <+16>:	push   $0x8049808
+   0x08048cf5 <+21>:	push   %edx
+   0x08048cf6 <+22>:	call   0x8048860 <sscanf@plt>
+   0x08048cfb <+27>:	add    $0x10,%esp
+   0x08048cfe <+30>:	cmp    $0x1,%eax
+   0x08048d01 <+33>:	jne    0x8048d09 <phase_4+41>
+   0x08048d03 <+35>:	cmpl   $0x0,-0x4(%ebp)
+   0x08048d07 <+39>:	jg     0x8048d0e <phase_4+46>
+   0x08048d09 <+41>:	call   0x80494fc <explode_bomb>
+   0x08048d0e <+46>:	add    $0xfffffff4,%esp
+   0x08048d11 <+49>:	mov    -0x4(%ebp),%eax
+   0x08048d14 <+52>:	push   %eax
+   0x08048d15 <+53>:	call   0x8048ca0 <func4>
+   0x08048d1a <+58>:	add    $0x10,%esp
+   0x08048d1d <+61>:	cmp    $0x37,%eax
+   0x08048d20 <+64>:	je     0x8048d27 <phase_4+71>
+   0x08048d22 <+66>:	call   0x80494fc <explode_bomb>
+   0x08048d27 <+71>:	mov    %ebp,%esp
+   0x08048d29 <+73>:	pop    %ebp
+   0x08048d2a <+74>:	ret
+End of assembler dump.
+```
+
+Nous voyons qu'il y encore un appel à `sscanf`. Nous pouvons voir quel _input format_, elle prend (même chose qu'en 3ème étape) : `%d`. Nous voyons aussi qu'une nouvelle fonction est appelée : `func4`. `0x08048d1d <+61>:	cmp    $0x37,%eax` : la valeur de retour de `func4` est comparée à `0x37`. Faisons un tour du coup de `func4` pour voir ce qu'elle fait :
+
+```
+Dump of assembler code for function func4:
+   0x08048ca0 <+0>:	push   %ebp
+   0x08048ca1 <+1>:	mov    %esp,%ebp
+   0x08048ca3 <+3>:	sub    $0x10,%esp
+   0x08048ca6 <+6>:	push   %esi
+   0x08048ca7 <+7>:	push   %ebx
+   0x08048ca8 <+8>:	mov    0x8(%ebp),%ebx
+   0x08048cab <+11>:	cmp    $0x1,%ebx
+   0x08048cae <+14>:	jle    0x8048cd0 <func4+48>
+   0x08048cb0 <+16>:	add    $0xfffffff4,%esp
+   0x08048cb3 <+19>:	lea    -0x1(%ebx),%eax
+   0x08048cb6 <+22>:	push   %eax
+   0x08048cb7 <+23>:	call   0x8048ca0 <func4>
+   0x08048cbc <+28>:	mov    %eax,%esi
+   0x08048cbe <+30>:	add    $0xfffffff4,%esp
+   0x08048cc1 <+33>:	lea    -0x2(%ebx),%eax
+   0x08048cc4 <+36>:	push   %eax
+   0x08048cc5 <+37>:	call   0x8048ca0 <func4>
+   0x08048cca <+42>:	add    %esi,%eax
+   0x08048ccc <+44>:	jmp    0x8048cd5 <func4+53>
+   0x08048cce <+46>:	mov    %esi,%esi
+   0x08048cd0 <+48>:	mov    $0x1,%eax
+   0x08048cd5 <+53>:	lea    -0x18(%ebp),%esp
+   0x08048cd8 <+56>:	pop    %ebx
+   0x08048cd9 <+57>:	pop    %esi
+   0x08048cda <+58>:	mov    %ebp,%esp
+   0x08048cdc <+60>:	pop    %ebp
+   0x08048cdd <+61>:	ret
+End of assembler dump.
+```
+
+Décomposons un petit peu cette fonction pour comprendre :
+
+```
+0x08048ca8 <+8>:	mov    0x8(%ebp),%ebx
+0x08048cab <+11>:	cmp    $0x1,%ebx
+0x08048cae <+14>:	jle    0x8048cd0 <func4+48>
+```
+
+Nous voyons que la valeur initiale qui se trouve à `%ebp + 0x8` est copiée dans `%ebx`. Puis si cette valeur est inférieure ou égale à `1` et enfin `jump` à `<func4+48>` soit :
+
+```
+0x08048cd0 <+48>:	mov    $0x1,%eax
+```
+
+Cette ligne se charge d'initialiser `%eax` à la valeur `1`, or `%eax` est la valeur de retour de la fonction `func4`. Si la condition n'est pas remplie le bout de code suivant est exécuté :
+
+```
+0x08048cb3 <+19>:	lea    -0x1(%ebx),%eax
+0x08048cb6 <+22>:	push   %eax
+0x08048cb7 <+23>:	call   0x8048ca0 <func4>
+0x08048cbc <+28>:	mov    %eax,%esi
+0x08048cbe <+30>:	add    $0xfffffff4,%esp
+0x08048cc1 <+33>:	lea    -0x2(%ebx),%eax
+0x08048cc4 <+36>:	push   %eax
+0x08048cc5 <+37>:	call   0x8048ca0 <func4>
+0x08048cca <+42>:	add    %esi,%eax
+```
+
+Nous avons une série d'opérations : `lea` va retrancher `1` à la valeur passée en paramêtre (`%ebx`) et la stocker dans `%eax`. Puis `%eax` est mise de côté sur la stack. Puis on appel de la fonction `func4` avec la nouvelle valeur de `%eax`. Nous voyons que le même processus est répété mais avec après avoir retranché `2` à `%ebx`. Puis nous voyons une addition de `%esi` et `%eax`.
+
+Que se passe-t'il ? Nous pouvons en conclure que la fonction `func4` arrête sa récursive lorsque que la valeur passée en paramêtre - appelons-la `x`, est inférieure ou égale à `1`. À ce moment-là `func4` renvoit la valeur `1`. Nous avons donc un calcul de toutes les valeurs de `x` à `1` en effectuant une récursive `func4(x - 1)` et `func4(x - 2)`. Puis nous faisons la somme des deux - `func4(x - 1) + func4(x - 2)`, et nous renvoyons le résultat à `phase_4`. Cette suite se nomme la suite de Fibonnacci.
+
+De retour dans `phase_4`, nous voyons que le résultat est comparé à la valeur `0x37` :
+
+```
+0x08048d1d <+61>:	cmp    $0x37,%eax
+```
+
+Or `0x37` vaut `55` en décimal. Dans la suite de Fibonnacci, que nous désignerons par `F`, `F(10) == 55`. Voici un petit tableau qui résume la suite :
+
+ F(0)| F(1) | F(2) | F(3) | F(4) | F(5) | ... | F(10)
+-----|------|------|------|------|------|-----|-------
+ 0   |  1   |  1   |  2   |  3   |  5   | ... |  55
+
+Dans notre fonction `func4` nous avons vu que si `x <= 1` alors `func4` retourne `1`. Ce qui veut dire que la suite démarre à F(1). Ce qui signifie qu'il y a un décalage de `-1`. Donc comme `F(1)` équivaut à `F(0)` alors `F(10)` correspond à `F(9)` et donc `x` vaut `9` !
+
+Le 4ème mot de passe est donc simplement : `9`.
 
 ### 5ème étape
 
