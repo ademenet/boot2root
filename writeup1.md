@@ -411,7 +411,100 @@ Nous pouvons constater un appel à `sscanf` ce qui est intéressant car elle pre
 0x80497de:	 "%d %c %d"
 ```
 
-`1 b 214`
+Nous savons alors que le mot de passe contiendra : un `int`, un `char` et un `int`.
+Nous pouvons relancer ainsi gdb avec ces paramètres : `1 a 2`.
+
+```
+(gdb) x/10i $pc
+=> 0x8048b9f <phase_3+7>:	mov    0x8(%ebp),%edx
+   0x8048ba2 <phase_3+10>:	add    $0xfffffff4,%esp
+   0x8048ba5 <phase_3+13>:	lea    -0x4(%ebp),%eax
+   0x8048ba8 <phase_3+16>:	push   %eax
+   0x8048ba9 <phase_3+17>:	lea    -0x5(%ebp),%eax
+   0x8048bac <phase_3+20>:	push   %eax
+   0x8048bad <phase_3+21>:	lea    -0xc(%ebp),%eax
+   0x8048bb0 <phase_3+24>:	push   %eax
+   0x8048bb1 <phase_3+25>:	push   $0x80497de
+   0x8048bb6 <phase_3+30>:	push   %edx
+```
+
+Nous observons le contenu de _(%ebp - 0xc)_ sur la ligne ci-dessous:
+
+_0x08048bad <+21>:	lea    -0xc(%ebp),%eax_
+
+```
+(gdb) x/d (0xbffff708 - 0xc)
+0xbffff6fc:	8
+```
+
+Le premier int est comparé avec 8, si notre int est inférieur à 8 alors rien ne se passe mais dans le cas contraire nous allons dans la fonction `explode_bomb`.
+
+Ensuite, nous allons voir une insctruction _jmp_ qui jumpera à l'offset de la valeur stocké dans la mémoire _*0x80497e8(,%eax,4)_. Le contenu de _%ebp - 0xc_ est la valeur de notre premier int, dans notre cas : 1.
+
+```
+(gdb) until *0x08048bc9
+0x08048bc9 in phase_3 ()
+(gdb) x/10i $pc
+=> 0x8048bc9 <phase_3+49>:	cmpl   $0x7,-0xc(%ebp)
+   0x8048bcd <phase_3+53>:	ja     0x8048c88 <phase_3+240>
+   0x8048bd3 <phase_3+59>:	mov    -0xc(%ebp),%eax
+   0x8048bd6 <phase_3+62>:	jmp    *0x80497e8(,%eax,4)
+   0x8048bdd <phase_3+69>:	lea    0x0(%esi),%esi
+   0x8048be0 <phase_3+72>:	mov    $0x71,%bl
+   0x8048be2 <phase_3+74>:	cmpl   $0x309,-0x4(%ebp)
+   0x8048be9 <phase_3+81>:	je     0x8048c8f <phase_3+247>
+   0x8048bef <phase_3+87>:	call   0x80494fc <explode_bomb>
+   0x8048bf4 <phase_3+92>:	jmp    0x8048c8f <phase_3+247>
+(gdb) i r ebp
+ebp            0xbffff708	0xbffff708
+(gdb) x/d (0xbffff708 - 0xc)
+0xbffff6fc:	1
+```
+
+Le saut nous amène alors un peu plus loin :
+```
+(gdb) x/10i $pc
+=> 0x8048c00 <phase_3+104>:	mov    $0x62,%bl
+   0x8048c02 <phase_3+106>:	cmpl   $0xd6,-0x4(%ebp)
+   0x8048c09 <phase_3+113>:	je     0x8048c8f <phase_3+247>
+   0x8048c0f <phase_3+119>:	call   0x80494fc <explode_bomb>
+```
+
+La troisième valeur, stockée dans _(%ebp - 0x4)_ est alors comparé avec _$0xd6_ ou 214 en décimal.
+
+```
+(gdb) i r ebp
+ebp            0xbffff708	0xbffff708
+(gdb) x/d (0xbffff708 - 0x4)
+0xbffff704:	2
+(gdb) print/d 0xd6
+$1 = 214
+```
+
+Nous relancons une troisième fois gdb maintenant que nous avons le dernier int, afin de connaitre le char que l'on recherche.
+
+Nous pouvons avancer jusqu'à la dernière comparaison. Verifions le contenu de _%ebp_ afin de s'assurer que cela contient bien notre char `a`. Puis le contenu de _%bl_
+
+```
+(gdb) x/10i $pc
+=> 0x8048c8f <phase_3+247>:	cmp    -0x5(%ebp),%bl
+   0x8048c92 <phase_3+250>:	je     0x8048c99 <phase_3+257>
+   0x8048c94 <phase_3+252>:	call   0x80494fc <explode_bomb>
+   0x8048c99 <phase_3+257>:	mov    -0x18(%ebp),%ebx
+   0x8048c9c <phase_3+260>:	mov    %ebp,%esp
+   0x8048c9e <phase_3+262>:	pop    %ebp
+   0x8048c9f <phase_3+263>:	ret
+(gdb) i r ebp
+ebp            0xbffff708	0xbffff708
+(gdb) x/c (0xbffff708 - 0x5)
+0xbffff703:	97 'a'
+(gdb) i r bl
+bl             0x62	98
+(gdb) print/c 0x62
+$1 = 98 'b'
+```
+
+Nous avons maintenant nos trois arguments à passer à la bombe à savoir : `1 b 214`.
 
 ### 4ème étape
 
