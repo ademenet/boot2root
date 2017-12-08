@@ -305,9 +305,16 @@ End of assembler dump.
 
 Nous constatons qu'il y a deux appels à `<explode_bomb>`. Le premier se fait après une comparaison (`cmpl`) entre la valeur à l'adresse `%ebp - 0x18` et la valeur fixe `$0x1`. Cela veut dire que c'est une comparaison à `1` ! Nous avons notre premier nombre.
 
-Un peu avant le second appel à `<explode_bomb>` nous remarquons une multiplication signée, `imul`. Le résultat de la multiplication est stocké dans `%eax` qui est ensuite comparé à une autre valeur.
+Un peu avant le second appel à `<explode_bomb>` nous remarquons une multiplication signée, `imul`. Le résultat de la multiplication est stocké dans `%eax` qui est ensuite comparé à une autre valeur. Donc, la valeur se trouve dans `%eax` au niveau de cette ligne :
 
-Nous pouvons en déduire que la suite que nous avons sous les yeux est une suite de nombres factoriels :
+```
+0x08048b7e <+54>:	cmp    %eax,(%esi,%ebx,4)
+[...]
+(gdb) i r eax
+eax            0x2	2
+```
+
+Donc la valeur suivante est `2` ! Nous pouvons procéder ainsi pour en déduire tout les nombres : `6`, `24`, `120` et `720`. Cette suite que nous avons sous les yeux est une suite de nombres factoriels :
 
 ```
 1! = 1
