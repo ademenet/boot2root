@@ -521,6 +521,41 @@ Suite de Fibonacci.
 
 ### 5ème étape
 
+Nous savons que notre chaîne de caractères doit contenir 6 caractères car un _cmp_ est effectué avec 6 et le retour d'un fonction qui compte le nombre de caractères de notre argument.
+
+```
+(gdb) disas
+[...]
+   0x08048d34 <+8>:	mov    0x8(%ebp),%ebx
+   0x08048d37 <+11>:	add    $0xfffffff4,%esp
+   0x08048d3a <+14>:	push   %ebx
+   0x08048d3b <+15>:	call   0x8049018 <string_length>
+   0x08048d40 <+20>:	add    $0x10,%esp
+   0x08048d43 <+23>:	cmp    $0x6,%eax
+```
+
+Nous redémarrons gdb avec comme argument : `123456`.
+
+En observant la boucle ci-dessous, on remarque que des opérations binares sont effectués. Le contenu de _%esi_ semble être un tableau de caractères. Chaque char de notre chaîne est passé sous un _and_ binaire avec _0xf_ et le résultat devient l'index du caractère crypté correspondant. Puis ce caractères est ajouté à la fin de _%ecx_.
+
+```
+(gdb) x/11i $pc
+=> 0x8048d4d <phase_5+33>:	xor    %edx,%edx
+   0x8048d4f <phase_5+35>:	lea    -0x8(%ebp),%ecx
+   0x8048d52 <phase_5+38>:	mov    $0x804b220,%esi
+   0x8048d57 <phase_5+43>:	mov    (%edx,%ebx,1),%al
+   0x8048d5a <phase_5+46>:	and    $0xf,%al
+   0x8048d5c <phase_5+48>:	movsbl %al,%eax
+   0x8048d5f <phase_5+51>:	mov    (%eax,%esi,1),%al
+   0x8048d62 <phase_5+54>:	mov    %al,(%edx,%ecx,1)
+   0x8048d65 <phase_5+57>:	inc    %edx
+   0x8048d66 <phase_5+58>:	cmp    $0x5,%edx
+   0x8048d69 <phase_5+61>:	jle    0x8048d57 <phase_5+43>
+(gdb) x/16c $esi
+0x804b220 <array.123>:	105 'i'	115 's'	114 'r'	118 'v'	101 'e'	97 'a'	119 'w'	104 'h'
+0x804b228 <array.123+8>:	111 'o'	98 'b'	112 'p'	110 'n'	117 'u'	116 't'	102 'f'	103 'g'
+```
+
 `opekmq`
 
 ### 6ème étape
