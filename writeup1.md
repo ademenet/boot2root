@@ -672,6 +672,106 @@ En observant la boucle ci-dessous, on remarque que des opérations binares sont 
 
 ### 6ème étape
 
+Un petit dump de `phase_6` :
+
+```
+Dump of assembler code for function phase_6:
+   0x08048d98 <+0>:	push   %ebp
+   0x08048d99 <+1>:	mov    %esp,%ebp
+   0x08048d9b <+3>:	sub    $0x4c,%esp
+   0x08048d9e <+6>:	push   %edi
+   0x08048d9f <+7>:	push   %esi
+   0x08048da0 <+8>:	push   %ebx
+   0x08048da1 <+9>:	mov    0x8(%ebp),%edx
+   0x08048da4 <+12>:	movl   $0x804b26c,-0x34(%ebp)
+   0x08048dab <+19>:	add    $0xfffffff8,%esp
+   0x08048dae <+22>:	lea    -0x18(%ebp),%eax
+   0x08048db1 <+25>:	push   %eax
+   0x08048db2 <+26>:	push   %edx
+   0x08048db3 <+27>:	call   0x8048fd8 <read_six_numbers>
+   0x08048db8 <+32>:	xor    %edi,%edi
+   0x08048dba <+34>:	add    $0x10,%esp
+   0x08048dbd <+37>:	lea    0x0(%esi),%esi
+   0x08048dc0 <+40>:	lea    -0x18(%ebp),%eax
+   0x08048dc3 <+43>:	mov    (%eax,%edi,4),%eax
+   0x08048dc6 <+46>:	dec    %eax
+   0x08048dc7 <+47>:	cmp    $0x5,%eax
+   0x08048dca <+50>:	jbe    0x8048dd1 <phase_6+57>
+   0x08048dcc <+52>:	call   0x80494fc <explode_bomb>
+   0x08048dd1 <+57>:	lea    0x1(%edi),%ebx
+   0x08048dd4 <+60>:	cmp    $0x5,%ebx
+   0x08048dd7 <+63>:	jg     0x8048dfc <phase_6+100>
+   0x08048dd9 <+65>:	lea    0x0(,%edi,4),%eax
+   0x08048de0 <+72>:	mov    %eax,-0x38(%ebp)
+   0x08048de3 <+75>:	lea    -0x18(%ebp),%esi
+   0x08048de6 <+78>:	mov    -0x38(%ebp),%edx
+   0x08048de9 <+81>:	mov    (%edx,%esi,1),%eax
+   0x08048dec <+84>:	cmp    (%esi,%ebx,4),%eax
+   0x08048def <+87>:	jne    0x8048df6 <phase_6+94>
+   0x08048df1 <+89>:	call   0x80494fc <explode_bomb>
+   0x08048df6 <+94>:	inc    %ebx
+   0x08048df7 <+95>:	cmp    $0x5,%ebx
+   0x08048dfa <+98>:	jle    0x8048de6 <phase_6+78>
+   0x08048dfc <+100>:	inc    %edi
+   0x08048dfd <+101>:	cmp    $0x5,%edi
+   0x08048e00 <+104>:	jle    0x8048dc0 <phase_6+40>
+   0x08048e02 <+106>:	xor    %edi,%edi
+   0x08048e04 <+108>:	lea    -0x18(%ebp),%ecx
+   0x08048e07 <+111>:	lea    -0x30(%ebp),%eax
+   0x08048e0a <+114>:	mov    %eax,-0x3c(%ebp)
+   0x08048e0d <+117>:	lea    0x0(%esi),%esi
+   0x08048e10 <+120>:	mov    -0x34(%ebp),%esi
+   0x08048e13 <+123>:	mov    $0x1,%ebx
+   0x08048e18 <+128>:	lea    0x0(,%edi,4),%eax
+   0x08048e1f <+135>:	mov    %eax,%edx
+   0x08048e21 <+137>:	cmp    (%eax,%ecx,1),%ebx
+   0x08048e24 <+140>:	jge    0x8048e38 <phase_6+160>
+   0x08048e26 <+142>:	mov    (%edx,%ecx,1),%eax
+   0x08048e29 <+145>:	lea    0x0(%esi,%eiz,1),%esi
+   0x08048e30 <+152>:	mov    0x8(%esi),%esi
+   0x08048e33 <+155>:	inc    %ebx
+   0x08048e34 <+156>:	cmp    %eax,%ebx
+   0x08048e36 <+158>:	jl     0x8048e30 <phase_6+152>
+   0x08048e38 <+160>:	mov    -0x3c(%ebp),%edx
+   0x08048e3b <+163>:	mov    %esi,(%edx,%edi,4)
+   0x08048e3e <+166>:	inc    %edi
+   0x08048e3f <+167>:	cmp    $0x5,%edi
+   0x08048e42 <+170>:	jle    0x8048e10 <phase_6+120>
+   0x08048e44 <+172>:	mov    -0x30(%ebp),%esi
+   0x08048e47 <+175>:	mov    %esi,-0x34(%ebp)
+   0x08048e4a <+178>:	mov    $0x1,%edi
+   0x08048e4f <+183>:	lea    -0x30(%ebp),%edx
+   0x08048e52 <+186>:	mov    (%edx,%edi,4),%eax
+   0x08048e55 <+189>:	mov    %eax,0x8(%esi)
+   0x08048e58 <+192>:	mov    %eax,%esi
+   0x08048e5a <+194>:	inc    %edi
+   0x08048e5b <+195>:	cmp    $0x5,%edi
+   0x08048e5e <+198>:	jle    0x8048e52 <phase_6+186>
+   0x08048e60 <+200>:	movl   $0x0,0x8(%esi)
+   0x08048e67 <+207>:	mov    -0x34(%ebp),%esi
+   0x08048e6a <+210>:	xor    %edi,%edi
+   0x08048e6c <+212>:	lea    0x0(%esi,%eiz,1),%esi
+   0x08048e70 <+216>:	mov    0x8(%esi),%edx
+   0x08048e73 <+219>:	mov    (%esi),%eax
+   0x08048e75 <+221>:	cmp    (%edx),%eax
+   0x08048e77 <+223>:	jge    0x8048e7e <phase_6+230>
+   0x08048e79 <+225>:	call   0x80494fc <explode_bomb>
+   0x08048e7e <+230>:	mov    0x8(%esi),%esi
+   0x08048e81 <+233>:	inc    %edi
+   0x08048e82 <+234>:	cmp    $0x4,%edi
+   0x08048e85 <+237>:	jle    0x8048e70 <phase_6+216>
+   0x08048e87 <+239>:	lea    -0x58(%ebp),%esp
+   0x08048e8a <+242>:	pop    %ebx
+   0x08048e8b <+243>:	pop    %esi
+   0x08048e8c <+244>:	pop    %edi
+   0x08048e8d <+245>:	mov    %ebp,%esp
+   0x08048e8f <+247>:	pop    %ebp
+   0x08048e90 <+248>:	ret
+End of assembler dump.
+```
+
+Dés le début, nous notons un appel à la fonction `read_six_numbers` : donc le mot de passe est de la forme `1 2 3 4 5 6`.
+
 `4 2 6 3 1 5`
 
 Bravo ! Nous pouvons nous connecter en ssh avec le login : `thor` et le password : `Publicspeakingisveryeasy.126241207201b2149opekmq426135`
