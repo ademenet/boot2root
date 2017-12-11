@@ -1,4 +1,4 @@
-% writeup1 boot2roo
+% writeup1 boot2root
 
 # Writeup1
 
@@ -52,7 +52,7 @@ PORT    STATE SERVICE
 443/tcp open  https
 993/tcp open  imaps
 [...]
-``` 
+```
 
 Nous constatons que l'IP `192.168.85.136` possède de multiples ports ouverts : `ssh`, `http`, `https`, `imap`, etc. Vous pouvez tester dans un navigateur d'aller voir `http://192.168.85.136` : un page statique s'affiche mais rien d'intéressant à en tirer.
 
@@ -134,7 +134,7 @@ Vous pouvez maintenant récupérer son contenu sur votre Mac en utilisant l'inje
 C'est un vrai bazard ! Après un peu d'investigation et de nettoyage du fichier nous obtenons la fonction `main` qui suit :
 
 ```C
-int main() 
+int main()
 {
     printf("M");
     printf("Y");
@@ -630,45 +630,105 @@ Or `0x37` vaut `55` en décimal. Dans la suite de Fibonnacci, que nous désigner
 Dans notre fonction `func4` nous avons vu que si `x <= 1` alors `func4` retourne `1`. Ce qui veut dire que la suite démarre à F(1). Ce qui signifie qu'il y a un décalage de `-1`. Donc comme `F(1)` équivaut à `F(0)` alors `F(10)` correspond à `F(9)` et donc `x` vaut `9` !
 
 Le 4ème mot de passe est donc simplement : `9`.
+```
 
 ### 5ème étape
 
-Nous savons que notre chaîne de caractères doit contenir 6 caractères car un _cmp_ est effectué avec 6 et le retour d'un fonction qui compte le nombre de caractères de notre argument.
+Nous commencons par ```disas phase_5``` et observons ce qu\'il se passe.
+Nous savons que notre chaîne de caractères doit contenir 6 caractères car un _cmp_ est effectué avec 6 et le retour d'une fonction qui compte le nombre de caractères de notre argument.
+
+Ensuite, en parcourant chaque opération, nous voyons qu\'un registre %edx est incrémenté à <phase_5 + 57>, suivi d\'une instruction jump-less-than juste après qui nous ramène à <phase_5 + 43>.
+Une boucle est en train de se produire. Et, comme on peut le voir sur la structure <phase_5 + 58>, la boucle itère 6 fois.
+Étant donné que notre chaîne comporte 6 caractères, il est logique de supposer que la fonction parcourt chaque caractère de la boucle et fait vraisemblablement quelque chose avec eux.
+
+Enfin, nous pouvons voir en bas de la fonction que <strings_not_equal> est appelé après que le contenu de %eax et l\'adresse fixe 0x804980b ait été poussés sur la stack.
+Le code compare la chaîne (probablement notre entrée) stockée dans %eax à une chaîne fixe stockée à 0x804980b.
+
+On run avec '123456' en argument et regardons ce qu\'il ce passe.
 
 ```
-(gdb) disas
-[...]
-   0x08048d34 <+8>:	mov    0x8(%ebp),%ebx
-   0x08048d37 <+11>:	add    $0xfffffff4,%esp
-   0x08048d3a <+14>:	push   %ebx
-   0x08048d3b <+15>:	call   0x8049018 <string_length>
-   0x08048d40 <+20>:	add    $0x10,%esp
-   0x08048d43 <+23>:	cmp    $0x6,%eax
+0x08048d72 <+70>:	push   $0x804980b
+0x08048d77 <+75>:	lea    -0x8(%ebp),%eax
+=> 0x08048d7a <+78>:	push   %eax
+0x08048d7b <+79>:	call   0x8049030 <strings_not_equal>
+0x08048d80 <+84>:	add    $0x10,%esp
+0x08048d83 <+87>:	test   %eax,%eax
+0x08048d85 <+89>:	je     0x8048d8c <phase_5+96>
+0x08048d87 <+91>:	call   0x80494fc <explode_bomb>
+0x08048d8c <+96>:	lea    -0x18(%ebp),%esp
+0x08048d8f <+99>:	pop    %ebx
+0x08048d90 <+100>:	pop    %esi
+0x08048d91 <+101>:	mov    %ebp,%esp
+0x08048d93 <+103>:	pop    %ebp
+0x08048d94 <+104>:	ret
+End of assembler dump.
+(gdb) x/6c $eax
+0xbffff6f0:	115 's'	114 'r'	118 'v'	101 'e'	97 'a'	119 'w'
+(gdb) x/6c 0x804980b
+0x804980b:	103 'g'	105 'i'	97 'a'	110 'n'	116 't'	115 's'
 ```
 
-Nous redémarrons gdb avec comme argument : `123456`.
+Nous savons maintenant que notre chaîne devrait sortir de la boucle en tant que "giants" car notre string est comparé à la valeur contenu dans 0x804980b qui se trouve être la chaîne "giants".
+"123456" devient "srveaw". Il semble que la boucle est un chiffrement.
 
-En observant la boucle ci-dessous, on remarque que des opérations binares sont effectués. Le contenu de _%esi_ semble être un tableau de caractères. Chaque char de notre chaîne est passé sous un _and_ binaire avec _0xf_ et le résultat devient l'index du caractère crypté correspondant. Puis ce caractères est ajouté à la fin de _%ecx_.
-
+En observant le code de-assemblé on peut voir que juste avant la boucle de verification de len, le contenu d'une adresse fixe $0x804b220 est chargé dans $esi.
 ```
-(gdb) x/11i $pc
-=> 0x8048d4d <phase_5+33>:	xor    %edx,%edx
-   0x8048d4f <phase_5+35>:	lea    -0x8(%ebp),%ecx
-   0x8048d52 <phase_5+38>:	mov    $0x804b220,%esi
-   0x8048d57 <phase_5+43>:	mov    (%edx,%ebx,1),%al
-   0x8048d5a <phase_5+46>:	and    $0xf,%al
-   0x8048d5c <phase_5+48>:	movsbl %al,%eax
-   0x8048d5f <phase_5+51>:	mov    (%eax,%esi,1),%al
-   0x8048d62 <phase_5+54>:	mov    %al,(%edx,%ecx,1)
-   0x8048d65 <phase_5+57>:	inc    %edx
-   0x8048d66 <phase_5+58>:	cmp    $0x5,%edx
-   0x8048d69 <phase_5+61>:	jle    0x8048d57 <phase_5+43>
 (gdb) x/16c $esi
 0x804b220 <array.123>:	105 'i'	115 's'	114 'r'	118 'v'	101 'e'	97 'a'	119 'w'	104 'h'
 0x804b228 <array.123+8>:	111 'o'	98 'b'	112 'p'	110 'n'	117 'u'	116 't'	102 'f'	103 'g'
 ```
+On peut également se rendre compte que a chaque tour de boucle un AND 0xf est appliqué à chacun de nos carractere passé en argument.
+```
+0x08048d5a <+46>:	and    $0xf,%al
+```
+Cela ressemble a un tableau de correspondance: un index correspond à un carractere.
+Pour le verifier executons le bout de code suivant qui set:
 
-`opekmq`
+```c
+#include <stdio.h>
+
+int main ()
+{
+	int tab[6];
+	int i = 0;
+
+	while (i < 6)
+	{
+		for (int a = 97; a < 123; ++a)
+		{
+			switch (a & 0xf)
+			{
+				case 15:
+					tab[0] = a;
+					continue;
+				case 0:
+					tab[1] = a;
+					continue;
+				case 5:
+					tab[2] = a;
+					continue;
+				case 11:
+					tab[3] = a;
+					continue;
+				case 13:
+					tab[4] = a;
+					continue;
+				case 1:
+					tab[5] = a;
+					continue;
+				default:
+					continue;
+			}
+		}
+		++i;
+	}
+	for (int i = 0; i < 6; ++i)
+		printf("%c\n", tab[i]);
+	return 0;
+}
+```
+
+Cela nous donne "opukmq" et le password fonctionne. Go to etape 6.
 
 ### 6ème étape
 
