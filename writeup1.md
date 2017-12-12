@@ -52,9 +52,9 @@ PORT    STATE SERVICE
 [...]
 ```
 
-Nous constatons que l'IP `192.168.85.136` possède de multiples ports ouverts : `ssh`, `http`, `https`, `imap`, etc. Vous pouvez tester dans un navigateur d'aller voir `http://192.168.85.136` : un page statique s'affiche mais rien d'intéressant à en tirer.
+Nous constatons que l'IP `192.168.85.136` possède de multiples ports ouverts : `ssh`, `http`, `https`, `imap`, etc. Vous pouvez tester dans un navigateur d'aller voir `http://192.168.85.136` : une page statique s'affiche mais rien d'intéressant à en tirer.
 
-Afin d'avoir une idée plus précise de l'architecture du site, nous utilisons le logiciel `dirb` qui va tester de multiples chemin et nous retourner ceux qui ne renvoient pas d'erreurs.
+Afin d'avoir une idée plus précise de l'architecture du site, nous utilisons le logiciel `dirb` qui va tester de multiple chemins et nous retourner ceux qui ne renvoient pas d'erreurs.
 
 Nous lançons le programme dirb qui prends deux arguments :
 
@@ -82,17 +82,17 @@ Oct 5 08:45:29 BornToSecHackMe sshd[7547]: Failed password for invalid user !q\]
 [...]
 ```
 
-`!q\]Ej?*5K5cy*AJ` correspond au mot de passe de `lmezard` ! Connectez vous à l'aide de ces identifiants et rendez vous dans le panneau de configuration. Nous pouvons récupérer son mail : `laurie@borntosec.net`. Il y a sûrement quelque chose à tenter avec ce dernier puisque nous savons que le serveur possède un protocole mail `imap`.
+`!q\]Ej?*5K5cy*AJ` correspond au mot de passe de `lmezard` ! Connectez vous à l'aide de ces identifiants et rendez-vous dans le panneau de configuration. Nous pouvons récupérer son mail : `laurie@borntosec.net`. Il y a sûrement quelque chose à tenter avec ce dernier puisque nous savons que le serveur possède un protocole mail `imap`.
 
 ## Le mail
 
-Rendez vous maintenant sur le webmail : `https://192.168.85.136/webmail`. Nous savons que son mail est `laurie@borntosec.net`. Se pourrait-il que cet utilisateur utilise le même mot de passe que pour le forum ?! Oui ! L'erreur de Laurie aura été de garder le même mot de passe sur le forum et sur sa boîte mail... Connectez vous avec : `!q\]Ej?*5K5cy*AJ`.
+Rendez vous maintenant sur le webmail : `https://192.168.85.136/webmail`. Nous savons que son mail est `laurie@borntosec.net`. Se pourrait-il que cet utilisateur utilise le même mot de passe que pour le forum ?! Oui ! L'erreur de Laurie aura été de garder le même mot de passe sur le forum et sur sa boîte mail... Connectez-vous avec : `!q\]Ej?*5K5cy*AJ`.
 
 Nous tombons sur un mail `DB Access`. Dans ce mail, le login `root` et le password `Fg-'kKXBj87E:aJ$` sont laissés en clair. Nous pouvons tranquillement nous connecter à PhpMyAdmin, c'est du propre !
 
 ## PhpMyAdmin
 
-Connectez vous à `https://192.168.85.136/phpmyadmin` avec les informations au dessus.
+Connectez vous à `https://192.168.85.136/phpmyadmin` avec les informations ci-dessus.
 
 Nous avons la possibilité de faire une injection SQL. Cliquez sur l'onglet SQL et copiez/collez la ligne suivante :
 
@@ -414,6 +414,10 @@ Nous pouvons constater un appel à `sscanf` ce qui est intéressant car elle pre
 ```
 (gdb) x/s 0x80497de
 0x80497de:	 "%d %c %d"
+(gdb) i r edx
+edx            0x804b720	134526753
+(gdb) x/s 0x804b720
+0x804b720 <input_strings+160>:	 "test"
 ```
 
 Nous savons alors que le mot de passe contiendra : un `int`, un `char` et un `int`.
@@ -431,13 +435,6 @@ Nous pouvons relancer ainsi gdb avec ces paramètres : `1 a 2`.
    0x8048bb0 <phase_3+24>:	push   %eax
    0x8048bb1 <phase_3+25>:	push   $0x80497de
    0x8048bb6 <phase_3+30>:	push   %edx
-```
-
-Nous observons le contenu de `%ebp - 0xc` sur la ligne ci-dessous : `_0x08048bad <+21>:	lea    -0xc(%ebp),%eax_`.
-
-```
-(gdb) x/d (0xbffff708 - 0xc)
-0xbffff6fc:	8
 ```
 
 Le premier int est comparé avec 8, si notre int est inférieur à 8 alors rien ne se passe mais dans le cas contraire nous allons dans la fonction `explode_bomb`.
@@ -459,13 +456,15 @@ Ensuite, nous allons voir une instruction `jmp` qui jumpera à l'offset de la va
    0x8048bef <phase_3+87>:	call   0x80494fc <explode_bomb>
    0x8048bf4 <phase_3+92>:	jmp    0x8048c8f <phase_3+247>
 (gdb) i r ebp
-ebp            0xbffff708	0xbffff708
-(gdb) x/d (0xbffff708 - 0xc)
-0xbffff6fc:	1
+ebp            0xbffff6f8	0xbffff6f8
+(gdb) x/d (0xbffff6f8 - 0xc)
+0xbffff6ec:	1
 ```
 
 Le saut nous amène alors un peu plus loin :
 ```
+(gdb) until *0x08048bc9
+0x08048bc9 in phase_3 ()
 (gdb) x/10i $pc
 => 0x8048c00 <phase_3+104>:	mov    $0x62,%bl
    0x8048c02 <phase_3+106>:	cmpl   $0xd6,-0x4(%ebp)
@@ -477,19 +476,21 @@ La troisième valeur, stockée dans _(%ebp - 0x4)_ est alors comparé avec _$0xd
 
 ```
 (gdb) i r ebp
-ebp            0xbffff708	0xbffff708
-(gdb) x/d (0xbffff708 - 0x4)
-0xbffff704:	2
+ebp            0xbffff6f8	0xbffff6f8
+(gdb) x/d (0xbffff6f8 - 0x4)
+0xbffff6f4:	2
 (gdb) print/d 0xd6
 $1 = 214
 ```
 
 Nous relancons une troisième fois gdb maintenant que nous avons le dernier int, afin de connaitre le char que l'on recherche.
 
-Nous pouvons avancer jusqu'à la dernière comparaison. Verifions le contenu de _%ebp_ afin de s'assurer que cela contient bien notre char `a`. Puis le contenu de _%bl_
+Nous pouvons avancer jusqu'à la dernière comparaison. Vérifions le contenu de _%ebp_ afin de s'assurer que cela contient bien notre char `a`. Puis le contenu de _%bl_
 
 ```
-(gdb) x/10i $pc
+(gdb) until *0x8048c8f
+0x08048c8f in phase_3 ()
+(gdb) x/7i $pc
 => 0x8048c8f <phase_3+247>:	cmp    -0x5(%ebp),%bl
    0x8048c92 <phase_3+250>:	je     0x8048c99 <phase_3+257>
    0x8048c94 <phase_3+252>:	call   0x80494fc <explode_bomb>
@@ -498,13 +499,13 @@ Nous pouvons avancer jusqu'à la dernière comparaison. Verifions le contenu de 
    0x8048c9e <phase_3+262>:	pop    %ebp
    0x8048c9f <phase_3+263>:	ret
 (gdb) i r ebp
-ebp            0xbffff708	0xbffff708
-(gdb) x/c (0xbffff708 - 0x5)
-0xbffff703:	97 'a'
+ebp            0xbffff6f8	0xbffff6f8
+(gdb) x/c (0xbffff6f8 - 0x5)
+0xbffff6f3:	97 'a'
 (gdb) i r bl
 bl             0x62	98
 (gdb) print/c 0x62
-$1 = 98 'b'
+$2 = 98 'b'
 ```
 
 Nous avons maintenant nos trois arguments à passer à la bombe à savoir : `1 b 214`.
