@@ -630,23 +630,23 @@ Or `0x37` vaut `55` en décimal. Dans la suite de Fibonnacci, que nous désigner
 Dans notre fonction `func4` nous avons vu que si `x <= 1` alors `func4` retourne `1`. Ce qui veut dire que la suite démarre à F(1). Ce qui signifie qu'il y a un décalage de `-1`. Donc comme `F(1)` équivaut à `F(0)` alors `F(10)` correspond à `F(9)` et donc `x` vaut `9` !
 
 Le 4ème mot de passe est donc simplement : `9`.
-```
 
 ### 5ème étape
 
-Nous commencons par ```disas phase_5``` et observons ce qu\'il se passe.
+Nous commencons par ```disas phase_5``` et observons ce qu'il se passe.
 Nous savons que notre chaîne de caractères doit contenir 6 caractères car un _cmp_ est effectué avec 6 et le retour d'une fonction qui compte le nombre de caractères de notre argument.
 
-Ensuite, en parcourant chaque opération, nous voyons qu\'un registre %edx est incrémenté à <phase_5 + 57>, suivi d\'une instruction jump-less-than juste après qui nous ramène à <phase_5 + 43>.
-Une boucle est en train de se produire. Et, comme on peut le voir sur la structure <phase_5 + 58>, la boucle itère 6 fois.
+Ensuite, en parcourant chaque opération, nous voyons qu'un registre _%edx_ est incrémenté à `<phase_5 + 57>`, suivi d'une instruction jump-less-than juste après qui nous ramène à `<phase_5 + 43>`.
+Une boucle est en train de se produire. Et, comme on peut le voir sur la structure `<phase_5 + 58>`, la boucle itère 6 fois.
 Étant donné que notre chaîne comporte 6 caractères, il est logique de supposer que la fonction parcourt chaque caractère de la boucle et fait vraisemblablement quelque chose avec eux.
 
-Enfin, nous pouvons voir en bas de la fonction que <strings_not_equal> est appelé après que le contenu de %eax et l\'adresse fixe 0x804980b ait été poussés sur la stack.
-Le code compare la chaîne (probablement notre entrée) stockée dans %eax à une chaîne fixe stockée à 0x804980b.
+Enfin, nous pouvons voir en bas de la fonction que `<strings_not_equal>` est appelé après que le contenu de _%eax_ et l'adresse fixe `0x804980b` ait été poussés sur la stack.
+Le code compare la chaîne (probablement notre entrée) stockée dans _%eax_ à une chaîne fixe stockée à `0x804980b`.
 
 On run avec '123456' en argument et regardons ce qu\'il ce passe.
 
 ```
+[...]
 0x08048d72 <+70>:	push   $0x804980b
 0x08048d77 <+75>:	lea    -0x8(%ebp),%eax
 => 0x08048d7a <+78>:	push   %eax
@@ -668,21 +668,26 @@ End of assembler dump.
 0x804980b:	103 'g'	105 'i'	97 'a'	110 'n'	116 't'	115 's'
 ```
 
-Nous savons maintenant que notre chaîne devrait sortir de la boucle en tant que "giants" car notre string est comparé à la valeur contenu dans 0x804980b qui se trouve être la chaîne "giants".
-"123456" devient "srveaw". Il semble que la boucle est un chiffrement.
+Nous savons maintenant que notre chaîne devrait sortir de la boucle en tant que `giants` car notre string est comparé à la valeur contenu dans `0x804980b` qui se trouve être la chaîne : `giants`.
 
-En observant le code de-assemblé on peut voir que juste avant la boucle de verification de len, le contenu d'une adresse fixe $0x804b220 est chargé dans $esi.
+'123456' devient 'srveaw'. Il semble que la boucle soit une boucle qui chiffre la chaîne.
+
+En observant le code de-assemblé nous pouvons voir que juste avant la boucle de vérification de _len_, le contenu d'une adresse fixe `$0x804b220` est chargé dans _$esi_.
+
 ```
 (gdb) x/16c $esi
 0x804b220 <array.123>:	105 'i'	115 's'	114 'r'	118 'v'	101 'e'	97 'a'	119 'w'	104 'h'
 0x804b228 <array.123+8>:	111 'o'	98 'b'	112 'p'	110 'n'	117 'u'	116 't'	102 'f'	103 'g'
 ```
-On peut également se rendre compte que a chaque tour de boucle un AND 0xf est appliqué à chacun de nos carractere passé en argument.
+
+On peut également se rendre compte qu'à chaque tour de boucle un `AND 0xf` est appliqué à chacun de nos caractères passés en argument.
+
 ```
 0x08048d5a <+46>:	and    $0xf,%al
 ```
-Cela ressemble a un tableau de correspondance: un index correspond à un carractere.
-Pour le verifier executons le bout de code suivant qui set:
+
+Cela ressemble a un tableau de correspondance: un index correspond à un caractère.
+Pour le vérifier éxecutons le code suivant :
 
 ```c
 #include <stdio.h>
@@ -728,7 +733,7 @@ int main ()
 }
 ```
 
-Cela nous donne "opukmq" et le password fonctionne. Go to etape 6.
+Cela nous donne `opukmq` et le password fonctionne. Go to étape 6.
 
 ### 6ème étape
 
