@@ -440,9 +440,9 @@ Nous observons le contenu de `%ebp - 0xc` sur la ligne ci-dessous : `_0x08048bad
 0xbffff6fc:	8
 ```
 
-Le premier int est comparé avec 8, si notre int est inférieur à 8 alors rien ne se passe mais dans le cas contraire nous allons dans la fonction `explode_bomb`.
+Le premier int est comparé avec `8`, si notre `int` est inférieur à `8` alors rien ne se passe mais dans le cas contraire nous allons dans la fonction `explode_bomb`.
 
-Ensuite, nous allons voir une instruction `jmp` qui jumpera à l'offset de la valeur stocké dans la mémoire `*0x80497e8(,%eax,4)`. Le contenu de `%ebp - 0xc` est la valeur de notre premier int, dans notre cas : `1`.
+Ensuite, nous allons voir une instruction `jmp` qui jumpera à l'offset de la valeur stocké dans la mémoire `*0x80497e8(,%eax,4)`. Le contenu de `%ebp - 0xc` est la valeur de notre premier `int`, dans notre cas : `1`.
 
 ```
 (gdb) until *0x08048bc9
@@ -465,6 +465,7 @@ ebp            0xbffff708	0xbffff708
 ```
 
 Le saut nous amène alors un peu plus loin :
+
 ```
 (gdb) x/10i $pc
 => 0x8048c00 <phase_3+104>:	mov    $0x62,%bl
@@ -473,7 +474,7 @@ Le saut nous amène alors un peu plus loin :
    0x8048c0f <phase_3+119>:	call   0x80494fc <explode_bomb>
 ```
 
-La troisième valeur, stockée dans _(%ebp - 0x4)_ est alors comparé avec _$0xd6_ ou 214 en décimal.
+La troisième valeur, stockée dans `(%ebp - 0x4)` est alors comparé avec `$0xd6` ou `214` en décimal.
 
 ```
 (gdb) i r ebp
@@ -484,9 +485,7 @@ ebp            0xbffff708	0xbffff708
 $1 = 214
 ```
 
-Nous relancons une troisième fois gdb maintenant que nous avons le dernier int, afin de connaitre le char que l'on recherche.
-
-Nous pouvons avancer jusqu'à la dernière comparaison. Verifions le contenu de _%ebp_ afin de s'assurer que cela contient bien notre char `a`. Puis le contenu de _%bl_
+Nous relançons une troisième fois `gdb` maintenant que nous avons le dernier int, afin de connaître le `char`. Nous pouvons avancer jusqu'à la dernière comparaison. Vérifions le contenu de `%ebp` afin de s'assurer que cela contient bien notre char `a`. Puis le contenu de `%bl`.
 
 ```
 (gdb) x/10i $pc
