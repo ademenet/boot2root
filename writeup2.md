@@ -10,6 +10,7 @@ présents :
     minutes.
 -   python 3.x.
 -   Reprendre les étapes du `writeup1` jusqu'à la connexion en ssh avec : _laurie_.
+-   scp -r -p user@serveur1:chemin/vers/dossier/source user@serveur2:chemin/vers/dossier/destination (envoyer le _script2.sh_ vers _laurie_)
 
 ## Le script
 
