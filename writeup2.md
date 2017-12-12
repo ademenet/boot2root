@@ -46,7 +46,7 @@ Ensuite nous compilons et lançons ce script avec un argument afin de choisir un
 
 # Explications
 
-Ce script utilise _l'exploit pokemon_ de la faille _dirtycow_ effective sur le kernel Unix [date]. Il remplace l'utilisateur `root` par un utilisateur custom.
+Ce script utilise _l'exploit pokemon_ de la faille _dirtycow_ effective sur le kernel Unix durant 9 ans. Il remplace l'utilisateur `root` par un utilisateur custom.
 L'user est invité à rentrer un nouveau mot de passe lors de l'éxecution du binaire ou à le passer en paramètre au moment de l'éxecution.
 Le fichier `/etc/passwd` original est sauvegardé dans `/tmp/passswd.bak`; pour ne pas laisser de traces après le passage vous êtes invités à le remettre en place.
 
