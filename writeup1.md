@@ -26,7 +26,7 @@ vmnet8: flags=8863<UP,BROADCAST,SMART,RUNNING,SIMPLEX,MULTICAST> mtu 1500
 	inet 192.168.85.1 netmask 0xffffff00 broadcast 192.168.85.255
 ```
 
-`vmnet8` correspond à notre machine virtuelle. Dans l'exemple précédent l'IP correspondante est `192.168.85.1`. Nous allons utiliser le logiciel `nmap` pour écouter les ports, de 1 à 255, qui sont utilisés :
+`vmnet8` correspond à notre machine virtuelle. Dans l'exemple précédent l'IP correspondante est `192.168.85.1`. Nous allons utiliser le logiciel `nmap` pour tester les derniers octets de l'IP - de 1 à 255, et trouver les ports qui sont utilisés :
 
 ```bash
 $> nmap 192.168.85.1-255
@@ -82,7 +82,7 @@ Oct 5 08:45:29 BornToSecHackMe sshd[7547]: Failed password for invalid user !q\]
 [...]
 ```
 
-`!q\]Ej?*5K5cy*AJ` correspond au mot de passe de `lmezard` ! Connectez vous à l'aide de ces identifiants et rendez vous dans le panneau de configuration. Nous pouvons récupérer son mail : `laurie@borntosec.net`. Il y a sûrement quelque chose à tenter avec ce dernier puisque nous savons que le serveur possède un serveur mail `imap`.
+`!q\]Ej?*5K5cy*AJ` correspond au mot de passe de `lmezard` ! Connectez vous à l'aide de ces identifiants et rendez vous dans le panneau de configuration. Nous pouvons récupérer son mail : `laurie@borntosec.net`. Il y a sûrement quelque chose à tenter avec ce dernier puisque nous savons que le serveur possède un protocole mail `imap`.
 
 ## Le mail
 
@@ -976,6 +976,6 @@ Nous pouvons exécuter la ligne suivante qui va démarrer le fichier `exploit_me
 
 Nous écrivons donc `\x90` sur 140 octets (qui correspond à un `NOP`, cela passe à l'octet suivant) puis nous passons au `shellcode`.
 
-Le programme va lire le shellcode et ouvrir un nouveau shell en root car l'user qui a crée `./exploit_me` est `root`.
+> Le programme va lire le shellcode et ouvrir un nouveau shell en root car l'user qui a crée `./exploit_me` est `root`.
 
 __Bravo ! Vous êtes root !__
