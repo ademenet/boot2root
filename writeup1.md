@@ -312,7 +312,7 @@ Un peu avant le second appel à `<explode_bomb>` nous remarquons une multiplicat
 eax            0x2	2
 ```
 
-Donc la valeur suivante est `2` ! Nous pouvons procéder ainsi pour en déduire tout les nombres : `6`, `24`, `120` et `720`. Cette suite que nous avons sous les yeux est une suite de nombres factoriels :
+Donc la valeur suivante est `2` ! Comme nous avons une boucle à `phase_2+68`, nous pouvons procéder ainsi pour en déduire tous les nombres : `6`, `24`, `120` et `720`. Cette suite que nous avons sous les yeux est une suite de nombres factoriels :
 
 ```
 1! = 1
@@ -433,9 +433,7 @@ Nous pouvons relancer ainsi gdb avec ces paramètres : `1 a 2`.
    0x8048bb6 <phase_3+30>:	push   %edx
 ```
 
-Nous observons le contenu de _(%ebp - 0xc)_ sur la ligne ci-dessous:
-
-_0x08048bad <+21>:	lea    -0xc(%ebp),%eax_
+Nous observons le contenu de `%ebp - 0xc` sur la ligne ci-dessous : `_0x08048bad <+21>:	lea    -0xc(%ebp),%eax_`.
 
 ```
 (gdb) x/d (0xbffff708 - 0xc)
@@ -444,7 +442,7 @@ _0x08048bad <+21>:	lea    -0xc(%ebp),%eax_
 
 Le premier int est comparé avec 8, si notre int est inférieur à 8 alors rien ne se passe mais dans le cas contraire nous allons dans la fonction `explode_bomb`.
 
-Ensuite, nous allons voir une insctruction _jmp_ qui jumpera à l'offset de la valeur stocké dans la mémoire _*0x80497e8(,%eax,4)_. Le contenu de _%ebp - 0xc_ est la valeur de notre premier int, dans notre cas : 1.
+Ensuite, nous allons voir une instruction `jmp` qui jumpera à l'offset de la valeur stocké dans la mémoire `*0x80497e8(,%eax,4)`. Le contenu de `%ebp - 0xc` est la valeur de notre premier int, dans notre cas : `1`.
 
 ```
 (gdb) until *0x08048bc9
