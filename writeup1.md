@@ -1,5 +1,3 @@
-% writeup1 boot2root
-
 # Writeup1
 
 ## Pré-requis
@@ -871,74 +869,67 @@ C'est long, n'est-ce-pas ? Essayons de repérer quelques éléments qui nous per
 0x08048e00 <+104>:	jle    0x8048dc0 <phase_6+40>       ; i <= 5: loop
 ```
 
-Nous savons donc que chacun des numéros est unique et inférieur ou égal à `5`. Ensuite, nous constatons une deuxième étape qui va créer une liste chaînée à partir des éléments donnés en paramètres :
+Nous savons donc que chacun des numéros est unique et inférieur ou égal à `5`. À partir de là nous pourrions générer tous les mots de passe et les tester un à un... C'est possible. Mais l'étude un peu plus prolongé du code nous apporte quelques éléments de réponses qui vont nous permettre d'en déduire l'ordre.
+
+Nous pouvons voir que le code est une succession de boucles. Il semble y avoir 3 grandes parties qui suivent :
+
+- la première crée une liste chaînée,
+- la seconde ré-arrange les maillons dans l'ordre donné par l'input,
+- la dernière vérifie cet ordre en regardant si les valeurs sont stockées dans l'ordre décroissant.
+
+En explorant un peu nous trouvons :
 
 ```
-0x08048e02 <+106>:	xor    %edi,%edi
-0x08048e04 <+108>:	lea    -0x18(%ebp),%ecx
-0x08048e07 <+111>:	lea    -0x30(%ebp),%eax
-0x08048e0a <+114>:	mov    %eax,-0x3c(%ebp)
-0x08048e0d <+117>:	lea    0x0(%esi),%esi
-0x08048e10 <+120>:	mov    -0x34(%ebp),%esi
-0x08048e13 <+123>:	mov    $0x1,%ebx
-0x08048e18 <+128>:	lea    0x0(,%edi,4),%eax
-0x08048e1f <+135>:	mov    %eax,%edx
-0x08048e21 <+137>:	cmp    (%eax,%ecx,1),%ebx
-0x08048e24 <+140>:	jge    0x8048e38 <phase_6+160>
-0x08048e26 <+142>:	mov    (%edx,%ecx,1),%eax
-0x08048e29 <+145>:	lea    0x0(%esi,%eiz,1),%esi
-0x08048e30 <+152>:	mov    0x8(%esi),%esi
-0x08048e33 <+155>:	inc    %ebx
-0x08048e34 <+156>:	cmp    %eax,%ebx
-0x08048e36 <+158>:	jl     0x8048e30 <phase_6+152>
-0x08048e38 <+160>:	mov    -0x3c(%ebp),%edx
-0x08048e3b <+163>:	mov    %esi,(%edx,%edi,4)
-0x08048e3e <+166>:	inc    %edi
-0x08048e3f <+167>:	cmp    $0x5,%edi
-0x08048e42 <+170>:	jle    0x8048e10 <phase_6+120>
+(gdb) x/3x $esi
+0x804b230 <node6>:	0x000001b0	0x00000006	0x0804b23c
+(gdb) x/3x *($esi + 8)
+0x804b23c <node5>:	0x000000d4	0x00000005	0x0804b248
+(gdb) x/3x *(*($esi + 8) + 8)
+0x804b248 <node4>:	0x000003e5	0x00000004	0x0804b254
+(gdb) x/3x *(*(*($esi + 8) + 8) + 8)
+0x804b254 <node3>:	0x0000012d	0x00000003	0x0804b260
+(gdb) x/3x *(*(*(*($esi + 8) + 8) + 8) + 8)
+0x804b260 <node2>:	0x000002d5	0x00000002	0x0804b26c
+(gdb) x/3x *(*(*(*(*($esi + 8) + 8) + 8) + 8) + 8)
+0x804b26c <node1>:	0x000000fd	0x00000001	0x00000000
 ```
 
-Puis cette liste chaînée est classée selon l'ordre de l'input.
+Nous avons une liste chaînée contenant des structures sûrement de la forme :
 
-```
-0x08048e44 <+172>:	mov    -0x30(%ebp),%esi
-0x08048e47 <+175>:	mov    %esi,-0x34(%ebp)
-0x08048e4a <+178>:	mov    $0x1,%edi
-0x08048e4f <+183>:	lea    -0x30(%ebp),%edx
-0x08048e52 <+186>:	mov    (%edx,%edi,4),%eax
-0x08048e55 <+189>:	mov    %eax,0x8(%esi)
-0x08048e58 <+192>:	mov    %eax,%esi
-0x08048e5a <+194>:	inc    %edi
-0x08048e5b <+195>:	cmp    $0x5,%edi
-0x08048e5e <+198>:	jle    0x8048e52 <phase_6+186>
-0x08048e60 <+200>:	movl   $0x0,0x8(%esi)
+```C
+struct      list
+{
+    int     value;
+    int     index;
+    list    *next;
+};
 ```
 
-Dans cette dernière partie, nous vérifions l'ordre des éléments de la liste.
+Nous voyons 6 _nodes_ :
 
-```
-0x08048e67 <+207>:	mov    -0x34(%ebp),%esi
-0x08048e6a <+210>:	xor    %edi,%edi
-0x08048e6c <+212>:	lea    0x0(%esi,%eiz,1),%esi
-0x08048e70 <+216>:	mov    0x8(%esi),%edx
-0x08048e73 <+219>:	mov    (%esi),%eax
-0x08048e75 <+221>:	cmp    (%edx),%eax
-0x08048e77 <+223>:	jge    0x8048e7e <phase_6+230>
-0x08048e79 <+225>:	call   0x80494fc <explode_bomb>
-0x08048e7e <+230>:	mov    0x8(%esi),%esi
-0x08048e81 <+233>:	inc    %edi
-0x08048e82 <+234>:	cmp    $0x4,%edi
-0x08048e85 <+237>:	jle    0x8048e70 <phase_6+216>
-0x08048e87 <+239>:	lea    -0x58(%ebp),%esp
-0x08048e8a <+242>:	pop    %ebx
-0x08048e8b <+243>:	pop    %esi
-0x08048e8c <+244>:	pop    %edi
-0x08048e8d <+245>:	mov    %ebp,%esp
-0x08048e8f <+247>:	pop    %ebp
-0x08048e90 <+248>:	ret
-```
+> Dans cette exemple nous avons utilisé l'_input_ : `6 5 4 3 2 1`.
 
-`4 2 6 3 1 5`
+node | value | index | next
+---|---|---|---|
+1 | 0x000000fd | 1 | NULL
+2 | 0x000002d5 | 2 | 0x0804b26c
+3 | 0x0000012d | 3 | 0x0804b260
+4 | 0x000003e5 | 4 | 0x0804b254
+5 | 0x000000d4 | 5 | 0x0804b248
+6 | 0x000001b0 | 6 | 0x0804b23c
+
+Et comme la dernière partie classe les maillons par ordre décroissant selon le champ _value_ nous avons :
+
+node | value | index |
+---|---|---|---
+4 | 0x000003e5 | 4 
+2 | 0x000002d5 | 2 
+6 | 0x000001b0 | 6 
+3 | 0x0000012d | 3 
+1 | 0x000000fd | 1 
+5 | 0x000000d4 | 5 
+
+Nous en concluons que le mot de passe final est : `4 2 6 3 1 5`.
 
 Bravo ! Nous pouvons nous connecter en ssh avec le login : `thor` et le password : `Publicspeakingisveryeasy.126241207201b2149opekmq426135`
 
