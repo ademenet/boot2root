@@ -1,5 +1,5 @@
 #!/bin/bash
-ifconfig vmnet8 | grep inet | cut -b 7-17 > vmnet8
+ifconfig vmnet8 | grep inet | tr -d '[:blank:]' | cut -c 5-16  > vmnet8
 cat vmnet8
 nmap `cat vmnet8`-255
 nmap `cat vmnet8`-255 | grep for | tail -n1 | cut -b 22-34 > vmnet8_port
