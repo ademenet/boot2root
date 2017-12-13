@@ -86,7 +86,7 @@ $> su firefart
 Password:
 ``` 
 
-On peut verifier que nous avons tous les droits en tapant la commande `id`:
+Nous pouvons vérifier que nous avons tous les droits en tapant la commande `id`:
 
 ```bash
 $> id
