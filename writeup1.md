@@ -607,7 +607,7 @@ Cette ligne se charge d'initialiser `%eax` à la valeur `1`, or `%eax` est la va
 0x08048cca <+42>:	add    %esi,%eax
 ```
 
-Nous avons une série d'opérations : `lea` va retrancher `1` à la valeur passée en paramêtre (`%ebx`) et la stocker dans `%eax`. Puis `%eax` est mise de côté sur la stack. Puis on appel de la fonction `func4` avec la nouvelle valeur de `%eax`. Nous voyons que le même processus est répété mais avec après avoir retranché `2` à `%ebx`. Puis nous voyons une addition de `%esi` et `%eax`.
+Nous avons une série d'opérations : `lea` va retrancher `1` à la valeur passée en paramêtre (`%ebx`) et la stocker dans `%eax`. Puis `%eax` est mise de côté sur la stack. Puis nous appellons de la fonction `func4` avec la nouvelle valeur de `%eax`. Nous voyons que le même processus est répété mais avec après avoir retranché `2` à `%ebx`. Puis nous voyons une addition de `%esi` et `%eax`.
 
 Que se passe-t'il ? Nous pouvons en conclure que la fonction `func4` arrête sa récursive lorsque que la valeur passée en paramêtre - appelons-la `x`, est inférieure ou égale à `1`. À ce moment-là `func4` renvoit la valeur `1`. Nous avons donc un calcul de toutes les valeurs de `x` à `1` en effectuant une récursive `func4(x - 1)` et `func4(x - 2)`. Puis nous faisons la somme des deux - `func4(x - 1) + func4(x - 2)`, et nous renvoyons le résultat à `phase_4`. Cette suite se nomme la suite de Fibonnacci.
 
@@ -633,13 +633,13 @@ Nous commencons par `disas phase_5` et observons ce qu'il se passe.
 Nous savons que notre chaîne de caractères doit contenir 6 caractères car un `cmp` est effectué avec `6` et le retour d'une fonction qui compte le nombre de caractères de notre argument.
 
 Ensuite, en parcourant chaque opération, nous voyons qu'un registre `%edx` est incrémenté à `<phase_5 + 57>`, suivi d'une instruction _jump-less-than_ juste après qui nous ramène à `<phase_5 + 43>`.
-Une boucle est en train de se produire. Et, comme on peut le voir sur la structure `<phase_5 + 58>`, la boucle itère 6 fois.
+Une boucle est en train de se produire. Et, comme nous pouvons le voir sur la structure `<phase_5 + 58>`, la boucle itère 6 fois.
 Étant donné que notre chaîne comporte 6 caractères, il est logique de supposer que la fonction parcourt chaque caractère de la boucle et fait vraisemblablement quelque chose avec eux.
 
 Enfin, nous pouvons voir en bas de la fonction que `<strings_not_equal>` est appelé après que le contenu de `%eax` et l'adresse fixe `0x804980b` ait été poussés sur la stack.
 Le code compare la chaîne (probablement notre entrée) stockée dans `%eax` à une chaîne fixe stockée à `0x804980b`.
 
-On run avec `123456` en argument et regardons ce qu'il ce passe.
+Nous runnons avec `123456` en argument et regardons ce qu'il ce passe.
 
 ```
 [...]
