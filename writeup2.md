@@ -69,15 +69,16 @@ La fonction `pid_t  fork(void);` est utilisé afin de créer un nouveau processu
 ### Processus parent :
 
 - Nous utilisons `pid_t  waitpid(pid_t pid, int *status, int options);` afin d'attendre le changement d'état du processus fils. `waitpid` suspend l'exécution du processus appelant jusqu'à ce que le fils spécifié par son pid ait changé d'état.
-- `long ptrace(enum __ptrace_request requête, pid_t pid, void *addr, void *data);` est utilisé, cette fonction fournit au processus parent un moyen de contrôler l'éxécution d'un autre processus et d'éditer son image mémoire. Avec `PTRACE_POKETEXT` permettant d'écrire le password dans le fichier mappé.
+- `long ptrace(enum __ptrace_request requête, pid_t pid, void *addr, void *data);` cette fonction fournit au processus parent un moyen de contrôler l'éxécution d'un autre processus et d'éditer son image mémoire. Avec `PTRACE_POKETEXT` permettant d'écrire le password dans le fichier mappé, elle s'exécute en parralèle du second thread qui notifie au système que le map ne sera pas utilisé bloquant ainsi la vérification des droits (via madvise()).
 
 
 ### Processus enfant :
 
-- `pthread_create` crée un nouveau thread qui exécute `madviseThread()` => manager le fonctionnement du système sur l'allocation; `MADV_DONTNEED` ne prévoit pas d'accès futur et donc le système ne vérifie pas les droits lors de l'écriture.
-- Utilisation de `ptrace` avec `PTRACE_TRACEME`, utile pour le processus parent
+- `pthread_create` crée un nouveau thread qui exécute `madviseThread()` qui va bloquer l'espace mémoire mappé pendant que l'autre thread le remplit avec le nouvel utilisateur. 
+- `madviseThread()` => manager le fonctionnement du système sur l'allocation; `MADV_DONTNEED` ne prévoit pas d'accès futur et donc le système ne vérifie pas les droits lors de l'écriture.
+- Utilisation de `ptrace` avec `PTRACE_TRACEME`, permet au processus parent de suivre l'enfant.
 - `kill` processus enfant
-- `pthread_join` suspends le processus enfant
+- `pthread_join` suspends le thread
 
 Le script script2.sh termine en se connectant en `firefart` donc le nouveau _super-user_
 
